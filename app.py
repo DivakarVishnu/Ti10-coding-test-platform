@@ -1,6 +1,7 @@
 import csv
 import io
 import os
+import sys
 import uuid
 from datetime import datetime
 from functools import wraps
@@ -19,7 +20,38 @@ import judge0_client as judge0
 
 app = Flask(__name__)
 app.config.from_object(Config)
+
 db.init_app(app)
+
+
+def ensure_db_ready():
+    """Idempotent: creates any missing tables/rows. Safe to call repeatedly."""
+    db.create_all()
+    if Settings.query.first() is None:
+        db.session.add(Settings(exam_title="Ti10", max_tab_switches=3))
+        db.session.commit()
+    if Admin.query.first() is None:
+        admin = Admin(username="KITCSE")
+        admin.set_password("CSE1234")
+        db.session.add(admin)
+        db.session.commit()
+
+
+with app.app_context():
+    ensure_db_ready()
+
+
+@app.before_request
+def _check_db():
+    from sqlalchemy import inspect
+    try:
+        if "settings" not in inspect(db.engine).get_table_names():
+            with app.app_context():
+                ensure_db_ready()
+    except Exception:
+        with app.app_context():
+            ensure_db_ready()
+
 
 LANGUAGES = judge0.LANGUAGES
 
