@@ -251,34 +251,3 @@ pre {
 }
 
 
-/* ============================================
-   LOGIN PAGE BACKGROUND IMAGE
-   ============================================ */
-.auth-wrapper {
-    background-image: url('static/css/image.png');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    min-height: calc(100vh - 90px);
-    display: flex;
-    align-items: center;
-    position: relative;
-}
-
-/* Dark overlay for readability */
-.auth-wrapper::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(9, 9, 15, 0.6); /* Matches your --bg color with opacity */
-    z-index: 0;
-}
-
-/* Make sure auth card stays on top */
-.auth-card {
-    position: relative;
-    z-index: 1;
-}
