@@ -13,11 +13,12 @@ def env(key, default=""):
 
 
 def _normalize_db_url(url):
-    """Render/Heroku give postgres:// but SQLAlchemy 2.x needs postgresql://"""
+    """Render/Heroku give postgres://, but SQLAlchemy needs postgresql+psycopg:// for psycopg3"""
     if url.startswith("postgres://"):
-        return url.replace("postgres://", "postgresql://", 1)
+        url = url.replace("postgres://", "postgresql://", 1)
+    if url.startswith("postgresql://") and "+psycopg" not in url:
+        url = url.replace("postgresql://", "postgresql+psycopg://", 1)
     return url
-
 
 class Config:
     SECRET_KEY = env("SECRET_KEY", "change-this-secret-key-in-production")
