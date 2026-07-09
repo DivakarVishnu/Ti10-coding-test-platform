@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Register — Ti10{% endblock %}
+{% block content %}
+<div class="auth-wrapper">
+<div class="row justify-content-center w-100">
+  <div class="col-md-5">
+    <div class="card shadow-sm auth-card">
+      <div class="card-body">
+        <div class="brand-mark mb-1">Ti10</div>
+        <p class="text-muted mb-4">Create your student account</p>
+        <form method="POST">
+          <div class="mb-3">
+            <label class="form-label">Full Name</label>
+            <input type="text" name="name" class="form-control" required autofocus>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Register Number</label>
+            <input type="text" name="register_no" class="form-control" required>
+          </div>
+          <div class="row">
+            <div class="col-6 mb-3">
+              <label class="form-label">Password</label>
+              <input type="password" name="password" class="form-control" required minlength="6">
+            </div>
+            <div class="col-6 mb-3">
+              <label class="form-label">Confirm Password</label>
+              <input type="password" name="confirm_password" class="form-control" required minlength="6">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Create Account</button>
+        </form>
+      </div>
+    </div>
+    <p class="text-center mt-3 text-muted small">
+      Already registered? <a href="{{ url_for('login') }}">Log in</a>
+    </p>
+    <p class="text-center text-muted small">
+      Your account needs admin approval before you can log in.
+    </p>
+  </div>
+</div>
+</div>
+{% endblock %}

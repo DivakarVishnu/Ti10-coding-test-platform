@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Students — Ti10 Admin{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <h4 class="mb-0">Students</h4>
+  <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary btn-sm">&larr; Dashboard</a>
+</div>
+
+<div class="btn-group mb-3" role="group">
+  <a href="{{ url_for('admin_students', status='pending') }}"
+     class="btn btn-sm {{ 'btn-primary' if status_filter == 'pending' else 'btn-outline-secondary' }}">
+    Pending {% if pending_count %}<span class="badge bg-danger ms-1">{{ pending_count }}</span>{% endif %}
+  </a>
+  <a href="{{ url_for('admin_students', status='approved') }}"
+     class="btn btn-sm {{ 'btn-primary' if status_filter == 'approved' else 'btn-outline-secondary' }}">Approved</a>
+  <a href="{{ url_for('admin_students', status='rejected') }}"
+     class="btn btn-sm {{ 'btn-primary' if status_filter == 'rejected' else 'btn-outline-secondary' }}">Rejected</a>
+</div>
+
+<table class="table table-bordered bg-white">
+  <thead>
+    <tr>
+      <th>Name</th><th>Email</th><th>Register No</th><th>Registered</th><th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for s in students %}
+    <tr>
+      <td>{{ s.name }}</td>
+      <td>{{ s.email }}</td>
+      <td>{{ s.register_no }}</td>
+      <td>{{ s.created_at.strftime('%d %b %Y, %H:%M') }}</td>
+      <td class="text-nowrap">
+        {% if status_filter == 'pending' %}
+          <form method="POST" action="{{ url_for('admin_approve_student', sid=s.id) }}" class="d-inline">
+            <button class="btn btn-sm btn-success">Approve</button>
+          </form>
+          <form method="POST" action="{{ url_for('admin_reject_student', sid=s.id) }}" class="d-inline">
+            <button class="btn btn-sm btn-outline-danger">Reject</button>
+          </form>
+        {% elif status_filter == 'rejected' %}
+          <form method="POST" action="{{ url_for('admin_approve_student', sid=s.id) }}" class="d-inline">
+            <button class="btn btn-sm btn-success">Approve</button>
+          </form>
+        {% else %}
+          <span class="badge bg-success">Approved</span>
+        {% endif %}
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5" class="text-muted">No students in this list.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

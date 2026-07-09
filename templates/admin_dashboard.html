@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard — Ti10{% endblock %}
+{% block content %}
+
+{% if pending_count %}
+<div class="alert alert-warning d-flex justify-content-between align-items-center flex-wrap gap-2">
+  <span><strong>{{ pending_count }}</strong> student{{ 's' if pending_count != 1 else '' }} waiting for approval.</span>
+  <a href="{{ url_for('admin_students', status='pending') }}" class="btn btn-sm btn-outline-secondary">Review</a>
+</div>
+{% endif %}
+
+<div class="row mb-4 g-3">
+  <div class="col-6 col-md-3"><div class="card stat-tile"><div class="card-body">
+    <h6 class="text-muted mb-1">Questions</h6><h3>{{ questions|length }}</h3>
+  </div></div></div>
+  <div class="col-6 col-md-3"><div class="card stat-tile"><div class="card-body">
+    <h6 class="text-muted mb-1">Approved Students</h6><h3>{{ students_count }}</h3>
+  </div></div></div>
+  <div class="col-6 col-md-3"><div class="card stat-tile"><div class="card-body">
+    <h6 class="text-muted mb-1">Pending</h6><h3>{{ pending_count }}</h3>
+  </div></div></div>
+  <div class="col-6 col-md-3"><div class="card stat-tile"><div class="card-body">
+    <h6 class="text-muted mb-1">Submissions</h6><h3>{{ submissions_count }}</h3>
+  </div></div></div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <h5>Exam Settings</h5>
+    <form method="POST" action="{{ url_for('admin_update_settings') }}" class="row g-3">
+      <div class="col-md-3">
+        <label class="form-label">Exam Title</label>
+        <input type="text" name="exam_title" class="form-control" value="{{ settings.exam_title }}">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Start Time (UTC, optional)</label>
+        <input type="datetime-local" name="start_time" class="form-control"
+               value="{{ settings.start_time.strftime('%Y-%m-%dT%H:%M') if settings.start_time else '' }}">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">End Time (UTC, optional)</label>
+        <input type="datetime-local" name="end_time" class="form-control"
+               value="{{ settings.end_time.strftime('%Y-%m-%dT%H:%M') if settings.end_time else '' }}">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Max Tab Switches</label>
+        <input type="number" name="max_tab_switches" min="0" class="form-control" value="{{ settings.max_tab_switches }}">
+      </div>
+      <div class="col-12">
+        <button class="btn btn-primary">Save Settings</button>
+        <span class="text-muted small">Exceeding max tab switches / fullscreen exits auto-submits the student's current question.</span>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+  <h5 class="mb-0">Questions</h5>
+  <div>
+    <a href="{{ url_for('admin_students') }}" class="btn btn-outline-secondary btn-sm">Students</a>
+    <a href="{{ url_for('admin_submissions') }}" class="btn btn-outline-secondary btn-sm">Submissions</a>
+    <a href="{{ url_for('admin_new_question') }}" class="btn btn-primary btn-sm">+ New Question</a>
+  </div>
+</div>
+
+<div class="table-responsive">
+<table class="table table-bordered bg-white">
+  <thead><tr>
+    <th>Title</th><th>Marks</th><th>Timer</th><th>Test Cases</th><th>Languages</th><th>Published</th><th></th>
+  </tr></thead>
+  <tbody>
+    {% for q in questions %}
+    <tr>
+      <td>{{ q.title }}</td>
+      <td>{{ q.marks }}</td>
+      <td>{% if q.question_time_limit_min %}{{ q.question_time_limit_min }} min{% else %}<span class="text-muted">—</span>{% endif %}</td>
+      <td>{{ q.test_cases|length }} ({{ q.hidden_test_cases()|length }} hidden)</td>
+      <td>{{ q.allowed_languages }}</td>
+      <td>{% if q.is_published %}<span class="badge bg-success">Yes</span>{% else %}<span class="badge bg-secondary">No</span>{% endif %}</td>
+      <td class="text-nowrap">
+        <a href="{{ url_for('admin_edit_question', qid=q.id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+        <form method="POST" action="{{ url_for('admin_delete_question', qid=q.id) }}" class="d-inline"
+              onsubmit="return confirm('Delete this question and all its submissions?')">
+          <button class="btn btn-sm btn-outline-danger">Delete</button>
+        </form>
+        <a href="{{ url_for('admin_submissions', question_id=q.id) }}" class="btn btn-sm btn-outline-secondary">Submissions</a>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="7" class="text-muted">No questions yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

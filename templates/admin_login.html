@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Admin Login — Ti10{% endblock %}
+{% block content %}
+<div class="auth-wrapper">
+<div class="row justify-content-center w-100">
+  <div class="col-md-4">
+    <div class="card shadow-sm auth-card">
+      <div class="card-body">
+        <div class="brand-mark mb-1">Ti10</div>
+        <p class="text-muted mb-4">Admin console</p>
+        <form method="POST">
+          <div class="mb-3">
+            <label class="form-label">Username</label>
+            <input type="text" name="username" class="form-control" required autofocus>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Password</label>
+            <input type="password" name="password" class="form-control" required>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Log In</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+{% endblock %}

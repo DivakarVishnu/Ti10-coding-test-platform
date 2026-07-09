@@ -1,0 +1,389 @@
+{% extends "base.html" %}
+{% block title %}{{ q.title }} — Ti10{% endblock %}
+{% block content %}
+
+<div id="violation-banner" class="violation-banner"></div>
+
+<div class="d-flex justify-content-between align-items-start mb-2 flex-wrap gap-2">
+  <h4 class="mb-0">{{ q.title }} <span class="badge bg-info">{{ q.marks }} marks</span></h4>
+  <div class="d-flex align-items-center gap-3">
+    {% if remaining_seconds is not none %}
+    <div class="timer-ring-wrap">
+      <div class="timer-ring" id="timer-ring">
+        <svg viewBox="0 0 64 64">
+          <circle class="ring-bg" cx="32" cy="32" r="28"></circle>
+          <circle class="ring-fg" id="ring-fg" cx="32" cy="32" r="28"
+                  stroke-dasharray="175.9" stroke-dashoffset="0"></circle>
+        </svg>
+        <div class="timer-ring-label" id="ring-label">--</div>
+      </div>
+      <div class="timer-text">Time left<br><span class="big" id="timer-text">--:--</span></div>
+    </div>
+    {% endif %}
+    <a href="{{ url_for('dashboard') }}" class="btn btn-sm btn-outline-secondary">&larr; Back</a>
+  </div>
+</div>
+
+{% if not is_open %}
+  <div class="alert alert-danger">The test window is closed. You can view this question but cannot run or submit.</div>
+{% elif settings.max_tab_switches %}
+  <div class="alert alert-info small py-2">
+    Switching tabs more than {{ settings.max_tab_switches }} time(s) will auto-submit your current code.
+  </div>
+{% endif %}
+
+<div class="row">
+  <div class="col-lg-5">
+    {% if q.image_filename %}
+    <img src="{{ url_for('static', filename='uploads/questions/' + q.image_filename) }}" class="q-image w-100">
+    {% endif %}
+
+    <div class="card mb-3">
+      <div class="card-body">
+        <h6>Description</h6>
+        <p style="white-space: pre-wrap;">{{ q.description }}</p>
+      </div>
+    </div>
+
+    {% if q.public_test_cases() %}
+    <div class="card mb-3">
+      <div class="card-body">
+        <h6>Sample Test Cases</h6>
+        {% for tc in q.public_test_cases() %}
+          <div class="mb-2 p-2 border rounded" style="border-color: var(--card-border) !important;">
+            <div><strong>Input:</strong><pre class="mb-1">{{ tc.input }}</pre></div>
+            <div><strong>Expected Output:</strong><pre class="mb-0">{{ tc.expected_output }}</pre></div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <div id="results-panel"></div>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="d-flex justify-content-between mb-2 flex-wrap gap-2">
+      <select id="language-select" class="form-select w-auto">
+        {% for lid, lname in lang_options %}
+          <option value="{{ lid }}" {% if draft and draft.language_id == lid %}selected{% endif %}>{{ lname }}</option>
+        {% endfor %}
+      </select>
+      <div>
+        <span id="autosave-indicator" class="text-muted small align-self-center me-2"></span>
+        <button id="run-btn" class="btn btn-outline-primary" {% if not is_open %}disabled{% endif %}>&#9654; Run</button>
+        <button id="submit-btn" class="btn btn-success" {% if not is_open %}disabled{% endif %}>&#10003; Submit</button>
+      </div>
+    </div>
+
+    <div id="editor" style="height: 480px; border: 1px solid var(--card-border); border-radius: 10px; overflow:hidden;"></div>
+  </div>
+</div>
+
+<script>
+  const QUESTION_ID = {{ q.id }};
+  const IS_OPEN = {{ 'true' if is_open else 'false' }};
+  const INITIAL_CODE = {{ (draft.code if draft else '') | tojson }};
+  const MAX_VIOLATIONS = {{ settings.max_tab_switches }};
+  const REMAINING_SECONDS = {{ remaining_seconds if remaining_seconds is not none else 'null' }};
+
+  let editor;               // Monaco instance, if it loads
+  let fallbackTextarea;     // plain <textarea>, used if Monaco fails to load
+  let violationCount = 0;
+  let lastViolationAt = 0;
+  let locked = false;
+  let submitting = false;
+
+  function getCode() {
+    if (editor) return editor.getValue();
+    if (fallbackTextarea) return fallbackTextarea.value;
+    return '';
+  }
+
+  function setEditorReadOnly(readOnly) {
+    if (editor) editor.updateOptions({ readOnly });
+    if (fallbackTextarea) fallbackTextarea.readOnly = readOnly;
+  }
+
+  function languageForId(id) {
+    const map = { '71': 'python', '62': 'java', '54': 'cpp', '50': 'c', '63': 'javascript' };
+    return map[String(id)] || 'plaintext';
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.innerText = str;
+    return div.innerHTML;
+  }
+
+  // ==================================================================
+  // Everything below this line is critical (anti-cheat tab tracking,
+  // run/submit) and must work even if the Monaco editor CDN fails to
+  // load. It runs first, independent of the editor setup further down.
+  // ==================================================================
+
+  // -------------------- Violation tracking (tab switch) --------------------
+  const banner = document.getElementById('violation-banner');
+
+  function flagViolation(reason) {
+    if (locked || !IS_OPEN) return;
+    const now = Date.now();
+    if (now - lastViolationAt < 1200) return; // debounce double-fires
+    lastViolationAt = now;
+    violationCount += 1;
+
+    if (violationCount >= MAX_VIOLATIONS) {
+      banner.textContent = `Violation limit reached (${violationCount}/${MAX_VIOLATIONS}). Auto-submitting...`;
+      banner.style.display = 'block';
+      doAutoSubmit('violations');
+    } else {
+      banner.textContent = `Warning: left the test screen (${reason}). ${violationCount}/${MAX_VIOLATIONS} — auto-submit at limit.`;
+      banner.style.display = 'block';
+      setTimeout(() => { if (!locked) banner.style.display = 'none'; }, 4000);
+    }
+  }
+
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) flagViolation('tab switch');
+  });
+
+  // -------------------- Countdown ring --------------------
+  if (REMAINING_SECONDS !== null) {
+    let remaining = REMAINING_SECONDS;
+    const totalGuess = Math.max(remaining, 1);
+    const ring = document.getElementById('ring-fg');
+    const ringWrap = document.getElementById('timer-ring');
+    const label = document.getElementById('ring-label');
+    const textEl = document.getElementById('timer-text');
+    const CIRC = 175.9;
+
+    function renderTimer() {
+      const m = Math.floor(remaining / 60);
+      const s = remaining % 60;
+      const mmss = `${m}:${String(s).padStart(2, '0')}`;
+      textEl.textContent = mmss;
+      label.textContent = m > 0 ? `${m}m` : `${s}s`;
+      const frac = Math.max(0, Math.min(1, remaining / totalGuess));
+      ring.setAttribute('stroke-dashoffset', String(CIRC * (1 - frac)));
+      ringWrap.classList.remove('warning', 'danger');
+      if (remaining <= 30) ringWrap.classList.add('danger');
+      else if (remaining <= totalGuess * 0.2) ringWrap.classList.add('warning');
+    }
+    renderTimer();
+
+    const timerInterval = setInterval(() => {
+      remaining -= 1;
+      if (remaining <= 0) {
+        remaining = 0;
+        renderTimer();
+        clearInterval(timerInterval);
+        doAutoSubmit('time_expired');
+        return;
+      }
+      renderTimer();
+    }, 1000);
+  }
+
+  // -------------------- Autosave --------------------
+  if (IS_OPEN) {
+    setInterval(function () {
+      if (locked) return;
+      fetch(`/draft/${QUESTION_ID}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: getCode(),
+          language_id: document.getElementById('language-select').value,
+        }),
+      }).then(() => {
+        document.getElementById('autosave-indicator').textContent =
+          'Autosaved ' + new Date().toLocaleTimeString();
+      }).catch(() => {});
+    }, 30000);
+  }
+
+  // -------------------- Results rendering --------------------
+  function renderResults(container, title, results) {
+    let html = `<div class="card mb-3"><div class="card-body"><h6>${title}</h6>`;
+    results.forEach((r) => {
+      const badge = r.passed ? 'success' : 'danger';
+      html += `<div class="mb-2 p-2 border rounded" style="border-color: var(--card-border) !important;">
+        <div><span class="badge bg-${badge}">${r.passed ? 'Passed' : 'Failed'}</span>
+        <span class="text-muted small ms-2">${r.status || ''}</span></div>
+        <div class="small mt-1"><strong>Input:</strong><pre class="mb-1">${escapeHtml(r.input || '')}</pre></div>
+        <div class="small"><strong>Expected:</strong><pre class="mb-1">${escapeHtml(r.expected_output || '')}</pre></div>
+        <div class="small"><strong>Your Output:</strong><pre class="mb-0">${escapeHtml(r.actual_output || '')}</pre></div>
+        ${r.stderr ? `<div class="small text-danger"><strong>Stderr:</strong><pre class="mb-0">${escapeHtml(r.stderr)}</pre></div>` : ''}
+        ${r.compile_output ? `<div class="small text-danger"><strong>Compile Output:</strong><pre class="mb-0">${escapeHtml(r.compile_output)}</pre></div>` : ''}
+      </div>`;
+    });
+    html += `</div></div>`;
+    container.innerHTML = html;
+  }
+
+  // -------------------- Run --------------------
+  document.getElementById('run-btn').addEventListener('click', function () {
+    if (locked) return;
+    const btn = this;
+    btn.disabled = true;
+    btn.textContent = 'Running...';
+    fetch(`/run/${QUESTION_ID}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        code: getCode(),
+        language_id: document.getElementById('language-select').value,
+      }),
+    })
+    .then(r => r.json())
+    .then(data => {
+      btn.disabled = false;
+      btn.innerHTML = '&#9654; Run';
+      const panel = document.getElementById('results-panel');
+      if (data.error) {
+        panel.innerHTML = `<div class="alert alert-danger">${escapeHtml(data.error)}</div>`;
+        return;
+      }
+      if (data.message) {
+        panel.innerHTML = `<div class="alert alert-info">${escapeHtml(data.message)}</div>`;
+        return;
+      }
+      renderResults(panel, 'Run Results (Sample Test Cases)', data.results);
+    })
+    .catch(() => { btn.disabled = false; btn.innerHTML = '&#9654; Run'; });
+  });
+
+  // -------------------- Submit (manual + auto) --------------------
+  function doSubmit(auto, reason) {
+    if (submitting) return;
+    submitting = true;
+    const payload = {
+      code: getCode(),
+      language_id: document.getElementById('language-select').value,
+      tab_switches: violationCount,
+      auto_submitted: !!auto,
+      auto_submit_reason: reason || null,
+    };
+    return fetch(`/submit/${QUESTION_ID}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    .then(r => r.json())
+    .then(data => {
+      submitting = false;
+      const panel = document.getElementById('results-panel');
+      if (data.error) {
+        panel.innerHTML = `<div class="alert alert-danger">${escapeHtml(data.error)}</div>`;
+        return data;
+      }
+      let html = `<div class="alert alert-success">Score: ${data.score} / ${data.max_score}
+        (${data.passed_count}/${data.total_count} test cases passed, including hidden ones)</div>`;
+      panel.innerHTML = html;
+      if (data.public_results && data.public_results.length) {
+        const div = document.createElement('div');
+        panel.appendChild(div);
+        renderResults(div, 'Sample Test Case Results', data.public_results);
+      }
+      return data;
+    })
+    .catch(() => { submitting = false; });
+  }
+
+  function doAutoSubmit(reason) {
+    if (locked) return;
+    locked = true;
+    setEditorReadOnly(true);
+    document.getElementById('run-btn').disabled = true;
+    document.getElementById('submit-btn').disabled = true;
+    const msg = reason === 'time_expired'
+      ? 'Time is up. Auto-submitting your answer...'
+      : 'Too many tab switches / full-screen exits. Auto-submitting your answer...';
+    banner.textContent = msg;
+    banner.style.display = 'block';
+    doSubmit(true, reason);
+  }
+
+  document.getElementById('submit-btn').addEventListener('click', function () {
+    if (locked) return;
+    if (!confirm('Submit final answer for this question? You can resubmit later if time remains.')) return;
+    const btn = this;
+    btn.disabled = true;
+    btn.textContent = 'Submitting...';
+    doSubmit(false, null).finally(() => {
+      btn.disabled = false;
+      btn.innerHTML = '&#10003; Submit';
+    });
+  });
+
+  // ==================================================================
+  // Monaco editor — loaded last, via its own external script tag below.
+  // If the CDN is blocked/slow/unreachable, everything above still
+  // works, and we fall back to a plain textarea after a short timeout.
+  // ==================================================================
+  function showFallbackEditor() {
+    const container = document.getElementById('editor');
+    if (!container || fallbackTextarea) return;
+    container.innerHTML = '';
+    fallbackTextarea = document.createElement('textarea');
+    fallbackTextarea.id = 'fallback-editor';
+    fallbackTextarea.value = INITIAL_CODE || '';
+    fallbackTextarea.spellcheck = false;
+    fallbackTextarea.style.cssText =
+      'width:100%; height:100%; background:#1e1e1e; color:#d4d4d4; font-family:var(--font-mono);' +
+      'font-size:14px; border:none; padding:12px; resize:none; outline:none; box-sizing:border-box;';
+    fallbackTextarea.addEventListener('paste', (e) => e.preventDefault());
+    container.appendChild(fallbackTextarea);
+  }
+
+  let monacoLoadTimedOut = false;
+  const monacoTimeout = setTimeout(function () {
+    monacoLoadTimedOut = true;
+    showFallbackEditor();
+  }, 8000);
+
+  function initMonaco() {
+    try {
+      if (typeof require === 'undefined') {
+        throw new Error('Monaco loader did not load (CDN unreachable/blocked).');
+      }
+      require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.47.0/min/vs' } });
+      require(['vs/editor/editor.main'], function () {
+        clearTimeout(monacoTimeout);
+        if (monacoLoadTimedOut) return; // fallback textarea already shown; leave it in place
+        editor = monaco.editor.create(document.getElementById('editor'), {
+          value: INITIAL_CODE || '',
+          language: languageForId(document.getElementById('language-select').value),
+          theme: 'vs-dark',
+          fontSize: 14,
+          minimap: { enabled: false },
+          automaticLayout: true,
+        });
+        editor.getDomNode().addEventListener('paste', function (e) { e.preventDefault(); }, true);
+      }, function () {
+        clearTimeout(monacoTimeout);
+        showFallbackEditor();
+      });
+    } catch (e) {
+      clearTimeout(monacoTimeout);
+      showFallbackEditor();
+    }
+  }
+
+  document.getElementById('language-select').addEventListener('change', function () {
+    if (editor) monaco.editor.setModelLanguage(editor.getModel(), languageForId(this.value));
+  });
+
+  // Load the Monaco loader script itself defensively (onerror -> fallback).
+  (function () {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/monaco-editor@0.47.0/min/vs/loader.js';
+    s.onload = initMonaco;
+    s.onerror = function () {
+      clearTimeout(monacoTimeout);
+      showFallbackEditor();
+    };
+    document.head.appendChild(s);
+  })();
+</script>
+{% endblock %}

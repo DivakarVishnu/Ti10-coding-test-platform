@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Submission #{{ sub.id }} — Ti10 Admin{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+  <div>
+    <h4 class="mb-1">{{ sub.student.name }} <span class="text-muted small">({{ sub.student.register_no }})</span></h4>
+    <p class="text-muted mb-0">{{ sub.question.title }} &middot; {{ LANGUAGES.get(sub.language_id, sub.language_id) }} &middot; {{ sub.submitted_at.strftime('%d %b %Y, %H:%M:%S') }}</p>
+  </div>
+  <a href="{{ url_for('admin_submissions', question_id=sub.question_id) }}" class="btn btn-outline-secondary btn-sm">&larr; Submissions</a>
+</div>
+
+<div class="row mb-3 g-3">
+  <div class="col-6 col-md-3"><div class="card stat-tile"><div class="card-body py-3">
+    <h6 class="text-muted mb-1 small">Score</h6><h4>{{ sub.score }} / {{ sub.max_score }}</h4>
+  </div></div></div>
+  <div class="col-6 col-md-3"><div class="card stat-tile"><div class="card-body py-3">
+    <h6 class="text-muted mb-1 small">Passed</h6><h4>{{ sub.passed_count }} / {{ sub.total_count }}</h4>
+  </div></div></div>
+  <div class="col-6 col-md-3"><div class="card stat-tile"><div class="card-body py-3">
+    <h6 class="text-muted mb-1 small">Tab Switches</h6><h4>{{ sub.tab_switches }}</h4>
+  </div></div></div>
+  <div class="col-6 col-md-3"><div class="card stat-tile"><div class="card-body py-3">
+    <h6 class="text-muted mb-1 small">Auto-Submitted</h6>
+    <h4>{% if sub.auto_submitted %}<span class="text-warning">{{ sub.auto_submit_reason }}</span>{% else %}No{% endif %}</h4>
+  </div></div></div>
+</div>
+
+<div class="card mb-3">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h6 class="mb-0">Submitted Code</h6>
+      <button id="rerun-btn" class="btn btn-sm btn-primary">Run this code now (verify)</button>
+    </div>
+    <pre id="code-block" style="max-height:500px; overflow:auto;">{{ sub.code }}</pre>
+  </div>
+</div>
+
+<div id="rerun-results"></div>
+
+<script>
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.innerText = str;
+    return div.innerHTML;
+  }
+
+  document.getElementById('rerun-btn').addEventListener('click', function () {
+    const btn = this;
+    btn.disabled = true;
+    btn.textContent = 'Running...';
+    fetch(`/admin/submission/{{ sub.id }}/rerun`, { method: 'POST' })
+      .then(r => r.json())
+      .then(data => {
+        btn.disabled = false;
+        btn.textContent = 'Run this code now (verify)';
+        const panel = document.getElementById('rerun-results');
+        if (data.error) {
+          panel.innerHTML = `<div class="alert alert-danger">${escapeHtml(data.error)}</div>`;
+          return;
+        }
+        let html = `<div class="card mb-3"><div class="card-body">
+          <h6>Live Re-run: ${data.passed_count}/${data.total_count} passed</h6>`;
+        data.results.forEach((r) => {
+          const badge = r.passed ? 'success' : 'danger';
+          html += `<div class="mb-2 p-2 border rounded" style="border-color: var(--card-border) !important;">
+            <div>
+              <span class="badge bg-${badge}">${r.passed ? 'Passed' : 'Failed'}</span>
+              <span class="badge bg-secondary ms-1">${r.is_hidden ? 'Hidden' : 'Public'}</span>
+              <span class="text-muted small ms-2">${r.status || ''}</span>
+            </div>
+            <div class="small mt-1"><strong>Input:</strong><pre class="mb-1">${escapeHtml(r.input || '')}</pre></div>
+            <div class="small"><strong>Expected:</strong><pre class="mb-1">${escapeHtml(r.expected_output || '')}</pre></div>
+            <div class="small"><strong>Output:</strong><pre class="mb-0">${escapeHtml(r.actual_output || '')}</pre></div>
+            ${r.stderr ? `<div class="small text-danger"><strong>Stderr:</strong><pre class="mb-0">${escapeHtml(r.stderr)}</pre></div>` : ''}
+          </div>`;
+        });
+        html += `</div></div>`;
+        panel.innerHTML = html;
+      })
+      .catch(() => { btn.disabled = false; btn.textContent = 'Run this code now (verify)'; });
+  });
+</script>
+{% endblock %}

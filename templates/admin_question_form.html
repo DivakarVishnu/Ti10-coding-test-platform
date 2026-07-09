@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if question else 'New' }} Question — Ti10{% endblock %}
+{% block content %}
+<h4>{{ 'Edit' if question else 'New' }} Question</h4>
+
+<form method="POST" enctype="multipart/form-data">
+  <div class="row g-3 mb-3">
+    <div class="col-md-6">
+      <label class="form-label">Title</label>
+      <input type="text" name="title" class="form-control" required value="{{ question.title if question else '' }}">
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">Marks</label>
+      <input type="number" name="marks" class="form-control" value="{{ question.marks if question else 10 }}">
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">Timer (minutes)</label>
+      <input type="number" name="question_time_limit_min" min="1" class="form-control"
+             placeholder="No limit"
+             value="{{ question.question_time_limit_min if question and question.question_time_limit_min else '' }}">
+    </div>
+    <div class="col-md-2 d-flex align-items-end">
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" name="is_published" id="pub"
+               {% if not question or question.is_published %}checked{% endif %}>
+        <label class="form-check-label" for="pub">Published</label>
+      </div>
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Description</label>
+    <textarea name="description" rows="5" class="form-control" required>{{ question.description if question else '' }}</textarea>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Question Image (optional — diagram, sample table, etc.)</label>
+    {% if question and question.image_filename %}
+      <div class="mb-2">
+        <img src="{{ url_for('static', filename='uploads/questions/' + question.image_filename) }}" class="q-image" style="max-height:200px;">
+        <div class="form-check mt-1">
+          <input class="form-check-input" type="checkbox" name="remove_image" id="rmimg">
+          <label class="form-check-label small text-muted" for="rmimg">Remove this image</label>
+        </div>
+      </div>
+    {% endif %}
+    <input type="file" name="image" accept=".png,.jpg,.jpeg,.gif,.webp" class="form-control">
+  </div>
+
+  <div class="row g-3 mb-3">
+    <div class="col-md-3">
+      <label class="form-label">Judge0 Time Limit (sec/run)</label>
+      <input type="number" step="0.5" name="time_limit_sec" class="form-control" value="{{ question.time_limit_sec if question else 2.0 }}">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Memory Limit (KB)</label>
+      <input type="number" name="memory_limit_kb" class="form-control" value="{{ question.memory_limit_kb if question else 128000 }}">
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Allowed Languages</label>
+      <div>
+        {% set allowed = question.allowed_language_ids() if question else [71, 62, 54, 50] %}
+        {% for lid, lname in languages.items() %}
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" name="languages" value="{{ lid }}"
+                   id="lang{{ lid }}" {% if lid in allowed %}checked{% endif %}>
+            <label class="form-check-label" for="lang{{ lid }}">{{ lname }}</label>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <hr>
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h5 class="mb-0">Test Cases</h5>
+    <button type="button" id="add-tc" class="btn btn-sm btn-outline-primary">+ Add Test Case</button>
+  </div>
+  <div id="tc-container"></div>
+
+  <div class="mt-3">
+    <button type="submit" class="btn btn-primary">Save Question</button>
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">Cancel</a>
+  </div>
+</form>
+
+<template id="tc-template">
+  <div class="card mb-2 tc-row">
+    <div class="card-body">
+      <div class="row g-2">
+        <div class="col-md-5">
+          <label class="form-label small">Input (stdin)</label>
+          <textarea name="tc_input[]" rows="3" class="form-control"></textarea>
+        </div>
+        <div class="col-md-5">
+          <label class="form-label small">Expected Output</label>
+          <textarea name="tc_output[]" rows="3" class="form-control"></textarea>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label small">Type</label>
+          <select name="tc_type[]" class="form-select">
+            <option value="public">Public (visible)</option>
+            <option value="hidden">Hidden</option>
+          </select>
+          <button type="button" class="btn btn-sm btn-outline-danger mt-2 remove-tc">Remove</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+  const container = document.getElementById('tc-container');
+  const template = document.getElementById('tc-template');
+
+  function addRow(inputVal = '', outputVal = '', type = 'public') {
+    const clone = template.content.cloneNode(true);
+    clone.querySelector('[name="tc_input[]"]').value = inputVal;
+    clone.querySelector('[name="tc_output[]"]').value = outputVal;
+    clone.querySelector('[name="tc_type[]"]').value = type;
+    clone.querySelector('.remove-tc').addEventListener('click', function () {
+      this.closest('.tc-row').remove();
+    });
+    container.appendChild(clone);
+  }
+
+  document.getElementById('add-tc').addEventListener('click', () => addRow());
+
+  {% if question %}
+    const existing = [
+      {% for tc in question.test_cases %}
+      { input: {{ tc.input|tojson }}, output: {{ tc.expected_output|tojson }}, type: "{{ 'hidden' if tc.is_hidden else 'public' }}" },
+      {% endfor %}
+    ];
+    existing.forEach(tc => addRow(tc.input, tc.output, tc.type));
+  {% else %}
+    addRow();
+  {% endif %}
+</script>
+{% endblock %}

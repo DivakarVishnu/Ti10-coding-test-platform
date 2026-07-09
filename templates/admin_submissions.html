@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Submissions — Ti10 Admin{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <h4 class="mb-0">Submissions</h4>
+  <div>
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">&larr; Dashboard</a>
+    <a href="{{ url_for('admin_export_csv', question_id=selected_qid) }}" class="btn btn-success">Export CSV</a>
+  </div>
+</div>
+
+<form method="GET" class="mb-3">
+  <select name="question_id" class="form-select w-auto d-inline-block" onchange="this.form.submit()">
+    <option value="">All Questions</option>
+    {% for q in questions %}
+      <option value="{{ q.id }}" {% if selected_qid == q.id %}selected{% endif %}>{{ q.title }}</option>
+    {% endfor %}
+  </select>
+</form>
+
+<div class="table-responsive">
+<table class="table table-bordered bg-white table-sm">
+  <thead>
+    <tr>
+      <th>Student</th><th>Reg. No</th><th>Question</th><th>Language</th>
+      <th>Score</th><th>Passed</th><th>Tab Switches</th><th>Auto</th><th>Submitted At</th><th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for s in submissions %}
+    <tr>
+      <td>{{ s.student.name }}</td>
+      <td>{{ s.student.register_no }}</td>
+      <td>{{ s.question.title }}</td>
+      <td>{{ LANGUAGES.get(s.language_id, s.language_id) }}</td>
+      <td>{{ s.score }} / {{ s.max_score }}</td>
+      <td>{{ s.passed_count }} / {{ s.total_count }}</td>
+      <td>{% if s.tab_switches %}<span class="text-danger">{{ s.tab_switches }}</span>{% else %}0{% endif %}</td>
+      <td>{% if s.auto_submitted %}<span class="badge bg-warning">{{ s.auto_submit_reason }}</span>{% else %}—{% endif %}</td>
+      <td>{{ s.submitted_at.strftime('%d %b %H:%M:%S') }}</td>
+      <td><a href="{{ url_for('admin_view_submission', sub_id=s.id) }}" class="btn btn-sm btn-outline-primary">View Code</a></td>
+    </tr>
+    {% else %}
+    <tr><td colspan="10" class="text-muted">No submissions yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}
