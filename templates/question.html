@@ -82,7 +82,10 @@
 <script>
   const QUESTION_ID = {{ q.id }};
   const IS_OPEN = {{ 'true' if is_open else 'false' }};
-  const INITIAL_CODE = {{ (draft.code if draft else '') | tojson }};
+  const ALREADY_SUBMITTED = {{ 'true' if existing_submission else 'false' }};
+  const EXISTING_SCORE = {{ existing_submission.score if existing_submission else 'null' }};
+  const EXISTING_MAX = {{ existing_submission.max_score if existing_submission else 'null' }};
+  const INITIAL_CODE = {{ (existing_submission.code if existing_submission else (draft.code if draft else '')) | tojson }};
   const MAX_VIOLATIONS = {{ settings.max_tab_switches }};
   const REMAINING_SECONDS = {{ remaining_seconds if remaining_seconds is not none else 'null' }};
 
@@ -90,8 +93,32 @@
   let fallbackTextarea;     // plain <textarea>, used if Monaco fails to load
   let violationCount = 0;
   let lastViolationAt = 0;
-  let locked = false;
+  let locked = ALREADY_SUBMITTED;
   let submitting = false;
+
+  function blockClipboard(el) {
+    ['paste', 'copy', 'cut'].forEach((evt) => {
+      el.addEventListener(evt, (e) => e.preventDefault(), true);
+    });
+    el.addEventListener('contextmenu', (e) => e.preventDefault(), true);
+    el.addEventListener('keydown', (e) => {
+      const k = e.key ? e.key.toLowerCase() : '';
+      if ((e.ctrlKey || e.metaKey) && (k === 'v' || k === 'c' || k === 'x')) {
+        e.preventDefault();
+      }
+    }, true);
+  }
+
+  if (ALREADY_SUBMITTED) {
+    document.getElementById('run-btn').disabled = true;
+    document.getElementById('submit-btn').disabled = true;
+    const panel = document.getElementById('results-panel');
+    if (panel) {
+      panel.innerHTML = `<div class="alert alert-success">
+        You've already submitted this question. Score: ${EXISTING_SCORE} / ${EXISTING_MAX}.
+        Only one attempt is allowed — this is a read-only view of what you submitted.</div>`;
+    }
+  }
 
   function getCode() {
     if (editor) return editor.getValue();
@@ -341,7 +368,8 @@
     fallbackTextarea.style.cssText =
       'width:100%; height:100%; background:#1e1e1e; color:#d4d4d4; font-family:var(--font-mono);' +
       'font-size:14px; border:none; padding:12px; resize:none; outline:none; box-sizing:border-box;';
-    fallbackTextarea.addEventListener('paste', (e) => e.preventDefault());
+blockClipboard(fallbackTextarea);
+    if (ALREADY_SUBMITTED) fallbackTextarea.readOnly = true;
     container.appendChild(fallbackTextarea);
   }
 
@@ -360,15 +388,17 @@
       require(['vs/editor/editor.main'], function () {
         clearTimeout(monacoTimeout);
         if (monacoLoadTimedOut) return; // fallback textarea already shown; leave it in place
-        editor = monaco.editor.create(document.getElementById('editor'), {
+      editor = monaco.editor.create(document.getElementById('editor'), {
           value: INITIAL_CODE || '',
           language: languageForId(document.getElementById('language-select').value),
           theme: 'vs-dark',
           fontSize: 14,
           minimap: { enabled: false },
           automaticLayout: true,
+          readOnly: ALREADY_SUBMITTED,
+          contextmenu: false,
         });
-        editor.getDomNode().addEventListener('paste', function (e) { e.preventDefault(); }, true);
+        blockClipboard(editor.getDomNode());
       }, function () {
         clearTimeout(monacoTimeout);
         showFallbackEditor();

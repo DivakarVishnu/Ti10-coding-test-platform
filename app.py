@@ -1,9 +1,8 @@
 import csv
 import io
 import os
-import sys
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import wraps
 
 from flask import (
@@ -17,7 +16,6 @@ from models import (
     Submission, Draft, QuestionAttempt, utcnow
 )
 import judge0_client as judge0
-from datetime import timedelta
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -57,13 +55,15 @@ def _check_db():
 LANGUAGES = judge0.LANGUAGES
 
 
-@app.template_filter("ist")
 def to_ist(dt):
     """Converts a naive UTC datetime to IST for display."""
     if not dt:
         return ""
     ist_dt = dt + timedelta(hours=5, minutes=30)
     return ist_dt.strftime("%d %b %Y, %I:%M %p")
+
+
+app.jinja_env.filters["ist"] = to_ist
 
 UPLOAD_DIR = os.path.join(app.static_folder, "uploads", "questions")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -132,7 +132,13 @@ def register():
             flash("An account with this register number already exists.", "error")
             return redirect(url_for("register"))
 
-        student = Student(name=name, email=email, register_no=register_no, year=year or None, status="pending")
+        student = Student(
+            name=name,
+            email=email,
+            register_no=register_no,
+            year=year or None,
+            status="pending",
+        )
         student.set_password(password)
         db.session.add(student)
         db.session.commit()
@@ -235,8 +241,9 @@ def question_page(qid):
         flash("This question isn't available to you yet.", "error")
         return redirect(url_for("dashboard"))
 
-    settings = Settings.get()
+ settings = Settings.get()
     draft = Draft.query.filter_by(student_id=session["student_id"], question_id=qid).first()
+    existing_submission = Submission.query.filter_by(student_id=session["student_id"], question_id=qid).first()
     allowed = q.allowed_language_ids()
     lang_options = [(lid, LANGUAGES.get(lid, f"Lang {lid}")) for lid in allowed]
 
@@ -246,6 +253,7 @@ def question_page(qid):
         "question.html",
         q=q,
         draft=draft,
+        existing_submission=existing_submission,
         lang_options=lang_options,
         settings=settings,
         is_open=settings.is_open(),
@@ -353,6 +361,10 @@ def submit_code(qid):
     settings = Settings.get()
     if not settings.is_open():
         return jsonify({"error": "The test window is closed."}), 403
+
+    existing = Submission.query.filter_by(student_id=session["student_id"], question_id=qid).first()
+    if existing:
+        return jsonify({"error": "You have already submitted this question. Only one attempt is allowed."}), 403
 
     data = request.get_json(silent=True) or {}
     code = data.get("code", "")
@@ -535,7 +547,7 @@ def admin_dashboard():
     submissions_count = Submission.query.count()
     settings = Settings.get()
     years = sorted(set(x.year for x in Question.query.all() if x.year))
-return render_template(
+    return render_template(
         "admin_dashboard.html",
         questions=questions,
         students_count=students_count,
@@ -787,7 +799,6 @@ def admin_export_csv():
                 to_ist(s.submitted_at) if s.submitted_at else "",
             ])
         except Exception:
-            # Skip a malformed row rather than crashing the whole report
             continue
 
     output = buf.getvalue()
