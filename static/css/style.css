@@ -490,3 +490,24 @@ pre {
 @media (max-width: 991px) {
   .code-editor-lg { height: 460px; min-height: 460px; }
 }
+
+
+
+/* ---------------------------------- Auth brand tagline ---------------------------------- */
+.tagline { letter-spacing: 0.02em; font-style: italic; }
+
+/* ---------------------------------- Full-page background waves ---------------------------------- */
+.bg-waves {
+  position: fixed;
+  left: -25%;
+  bottom: 0;
+  width: 150%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.55;
+}
+.bg-waves .wave-layer { position: static; left: 0; width: 100%; }
+.bg-waves .wave-3 svg { height: 60px; }
+.bg-waves .wave-2 svg { height: 60px; }
+.bg-waves .wave-1 svg { height: 60px; }
+.auth-wrapper, .navbar, .container { position: relative; z-index: 1; }

@@ -1,70 +1,96 @@
 {% extends "base.html" %}
 {% block title %}Login — Ti10{% endblock %}
 {% block content %}
-<div class="auth-wrapper">
-<div class="ocean-scene" id="ocean-scene">
-  <div class="ocean-moon"></div>
-  <div class="ocean-stars" id="ocean-stars"></div>
-  <div class="ocean-clouds">
-    <div class="cloud cloud-1"></div>
-    <div class="cloud cloud-2"></div>
-    <div class="cloud cloud-3"></div>
-  </div>
-  <div class="ocean-birds" id="ocean-birds"></div>
 
-  <div class="lighthouse">
-    <svg viewBox="0 0 30 60" xmlns="http://www.w3.org/2000/svg">
-      <rect x="12" y="8" width="6" height="42" fill="#d8b4fe"/>
-      <path d="M8 8 L22 8 L18 2 L12 2 Z" fill="#e9d5ff"/>
-      <rect x="6" y="50" width="18" height="6" fill="#7c3aed"/>
-    </svg>
-    <div class="lighthouse-beam"></div>
-  </div>
-
-  <div class="ship-wake" id="ship-wake"><div class="ship-wake-inner"></div></div>
-  <div class="ship-wrap" id="ship-wrap">
-    <svg viewBox="0 0 100 90" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="hullGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#c084fc"/>
-          <stop offset="100%" stop-color="#7c3aed"/>
-        </linearGradient>
-        <linearGradient id="sailGrad" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="#f3f0fa"/>
-          <stop offset="100%" stop-color="#d8b4fe"/>
-        </linearGradient>
-      </defs>
-      <rect x="48" y="10" width="3" height="46" fill="#e9d5ff"/>
-      <path d="M51 14 L51 52 L20 50 Q34 30 51 14 Z" fill="url(#sailGrad)" opacity="0.95"/>
-      <path d="M49 22 L49 50 L72 48 Q60 34 49 22 Z" fill="url(#sailGrad)" opacity="0.75"/>
-      <path d="M10 56 L90 56 L78 78 Q50 86 22 78 Z" fill="url(#hullGrad)"/>
-      <rect x="10" y="52" width="80" height="6" rx="2" fill="#a855f7"/>
-    </svg>
-  </div>
-
-  <div class="wave-layer wave-3">
-    <svg viewBox="0 0 1200 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M0,40 C150,80 350,0 600,40 C850,80 1050,0 1200,40 L1200,80 L0,80 Z" fill="rgba(124,58,237,0.35)"/>
-    </svg>
-  </div>
-  <div class="wave-layer wave-2">
-    <svg viewBox="0 0 1200 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M0,30 C200,70 400,10 600,35 C800,60 1000,10 1200,30 L1200,80 L0,80 Z" fill="rgba(168,85,247,0.45)"/>
-    </svg>
-  </div>
-  <div class="wave-layer wave-1">
-    <svg viewBox="0 0 1200 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M0,25 C180,55 420,5 600,28 C780,50 1020,5 1200,25 L1200,80 L0,80 Z" fill="rgba(88,28,135,0.85)"/>
-    </svg>
-  </div>
+<!-- Persistent background waves, sits behind the whole page -->
+<div class="bg-waves" aria-hidden="true">
+  <div class="wave-layer wave-3"><svg viewBox="0 0 600 40" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M0,20 C60,35 120,5 180,20 C240,35 300,5 360,20 C420,35 480,5 540,20 C570,27 600,20 600,20 L600,40 L0,40 Z" fill="#3b2e5e"/></svg></div>
+  <div class="wave-layer wave-2"><svg viewBox="0 0 600 40" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M0,22 C60,8 120,36 180,22 C240,8 300,36 360,22 C420,8 480,36 540,22 C570,15 600,22 600,22 L600,40 L0,40 Z" fill="#4c3b7a"/></svg></div>
+  <div class="wave-layer wave-1"><svg viewBox="0 0 600 40" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M0,18 C60,32 120,4 180,18 C240,32 300,4 360,18 C420,32 480,4 540,18 C570,25 600,18 600,18 L600,40 L0,40 Z" fill="#7c3aed" fill-opacity="0.55"/></svg></div>
 </div>
 
+<div class="auth-wrapper">
 <div class="row justify-content-center w-100">
   <div class="col-md-5">
+
+    <!-- ================= Ocean / ship scene ================= -->
+    <div class="ocean-scene" id="ocean-scene">
+      <div class="ocean-moon"></div>
+      <div class="ocean-stars" id="ocean-stars"></div>
+
+      <div class="ocean-clouds">
+        <div class="cloud cloud-1"></div>
+        <div class="cloud cloud-2"></div>
+        <div class="cloud cloud-3"></div>
+      </div>
+
+      <div class="ocean-birds" id="ocean-birds"></div>
+
+      <div class="lighthouse">
+        <div class="lighthouse-beam"></div>
+        <svg viewBox="0 0 22 60" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="8,60 14,60 12,10 10,10" fill="#e9d5ff"/>
+          <rect x="7" y="4" width="8" height="8" rx="1" fill="#fde68a"/>
+          <polygon points="6,4 16,4 11,0" fill="#a855f7"/>
+          <rect x="6" y="24" width="10" height="4" fill="#7c3aed"/>
+          <rect x="5" y="44" width="12" height="4" fill="#7c3aed"/>
+        </svg>
+      </div>
+
+      <div class="ship-wake" id="ship-wake">
+        <div class="ship-wake-inner"></div>
+      </div>
+
+      <div class="ship-wrap" id="ship-wrap">
+        <svg viewBox="0 0 92 60" xmlns="http://www.w3.org/2000/svg">
+          <!-- hull -->
+          <path d="M6 40 L86 40 L76 54 L16 54 Z" fill="#1e1b2e" stroke="#a855f7" stroke-width="1.5"/>
+          <!-- deck line -->
+          <rect x="10" y="36" width="72" height="5" rx="2" fill="#2a2440"/>
+          <!-- funnel -->
+          <rect x="60" y="20" width="8" height="16" rx="1" fill="#a855f7"/>
+          <rect x="59" y="18" width="10" height="4" rx="1" fill="#e9d5ff"/>
+          <!-- main mast -->
+          <line x1="34" y1="4" x2="34" y2="38" stroke="#c084fc" stroke-width="2"/>
+          <!-- sails -->
+          <path d="M35 6 C 55 10, 55 26, 35 30 Z" fill="#f3f0fa" opacity="0.92"/>
+          <path d="M33 12 C 18 15, 18 27, 33 32 Z" fill="#e9d5ff" opacity="0.85"/>
+          <!-- flag -->
+          <path d="M34 4 L44 7 L34 10 Z" fill="#fbbf24"/>
+          <!-- portholes -->
+          <circle cx="24" cy="47" r="2.4" fill="#fde68a"/>
+          <circle cx="38" cy="47" r="2.4" fill="#fde68a"/>
+          <circle cx="52" cy="47" r="2.4" fill="#fde68a"/>
+          <circle cx="66" cy="47" r="2.4" fill="#fde68a"/>
+        </svg>
+      </div>
+
+      <div class="wave-layer wave-3">
+        <svg viewBox="0 0 600 40" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0,20 C60,35 120,5 180,20 C240,35 300,5 360,20 C420,35 480,5 540,20 C570,27 600,20 600,20 L600,40 L0,40 Z" fill="#3b2e5e"/>
+        </svg>
+      </div>
+      <div class="wave-layer wave-2">
+        <svg viewBox="0 0 600 40" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0,22 C60,8 120,36 180,22 C240,8 300,36 360,22 C420,8 480,36 540,22 C570,15 600,22 600,22 L600,40 L0,40 Z" fill="#4c3b7a"/>
+        </svg>
+      </div>
+      <div class="wave-layer wave-1">
+        <svg viewBox="0 0 600 40" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0,18 C60,32 120,4 180,18 C240,32 300,4 360,18 C420,32 480,4 540,18 C570,25 600,18 600,18 L600,40 L0,40 Z" fill="#7c3aed" fill-opacity="0.55"/>
+        </svg>
+      </div>
+
+      <div id="ocean-bubbles"></div>
+    </div>
+    <!-- ================= /Ocean / ship scene ================= -->
+
     <div class="card shadow-sm auth-card">
       <div class="card-body">
-        <div class="brand-mark mb-1">Ti10</div>
-        <p class="text-muted mb-4">{{ settings.exam_title }}</p>
+        <div class="text-center mb-4">
+          <div class="brand-mark">Ti10</div>
+          <p class="text-muted mb-0 tagline">Making Waves</p>
+        </div>
         <form method="POST">
           <div class="mb-3">
             <label class="form-label">Email</label>
@@ -87,82 +113,85 @@
   </div>
 </div>
 </div>
-{% endblock %}
 
-{% block scripts %}
 <script>
+(function () {
   const scene = document.getElementById('ocean-scene');
-  const ship = document.getElementById('ship-wrap');
-  const wake = document.getElementById('ship-wake');
-  const starsLayer = document.getElementById('ocean-stars');
-  const birdsLayer = document.getElementById('ocean-birds');
+  if (!scene) return; // safety: don't break the page if markup is ever removed
 
-  // Scatter twinkling stars
-  for (let i = 0; i < 26; i++) {
-    const star = document.createElement('div');
-    star.className = 'star';
-    star.style.left = Math.random() * 100 + '%';
-    star.style.top = Math.random() * 55 + '%';
-    star.style.animationDelay = (Math.random() * 2.6) + 's';
-    starsLayer.appendChild(star);
+  // ---- Stars ----
+  const starsWrap = document.getElementById('ocean-stars');
+  const STAR_COUNT = 40;
+  for (let i = 0; i < STAR_COUNT; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    s.style.left = Math.random() * 100 + '%';
+    s.style.top = Math.random() * 55 + '%';
+    s.style.animationDelay = (Math.random() * 2.6).toFixed(2) + 's';
+    starsWrap.appendChild(s);
   }
 
-  // Rising bubbles near the ship
-  function spawnBubble() {
-    const b = document.createElement('div');
-    b.className = 'bubble';
-    const centerX = scene.clientWidth / 2;
-    b.style.left = (centerX + (Math.random() * 60 - 30)) + 'px';
-    b.style.animationDuration = (2.5 + Math.random() * 2) + 's';
-    scene.appendChild(b);
-    setTimeout(() => b.remove(), 4500);
-  }
-  setInterval(spawnBubble, 500);
-
-  // Occasional seagulls flying across
+  // ---- Seagulls (spawn occasionally) ----
+  const birdsWrap = document.getElementById('ocean-birds');
   function spawnBird() {
     const b = document.createElement('div');
     b.className = 'bird';
-    b.style.top = (10 + Math.random() * 20) + '%';
-    const duration = 9 + Math.random() * 6;
-    b.style.animationDuration = duration + 's, 1.4s';
-    birdsLayer.appendChild(b);
-    setTimeout(() => b.remove(), duration * 1000 + 200);
+    const top = 10 + Math.random() * 25;
+    const dur = 10 + Math.random() * 8;
+    b.style.top = top + '%';
+    b.style.animationDuration = dur + 's, 1.4s';
+    birdsWrap.appendChild(b);
+    setTimeout(() => b.remove(), dur * 1000 + 200);
   }
-  setInterval(spawnBird, 7000);
-  setTimeout(spawnBird, 1500);
+  spawnBird();
+  setInterval(spawnBird, 6000);
 
-  // Ship: autonomous gentle sailing drift + mouse parallax, combined every frame.
-  // Wake tracks the ship's exact position so it always trails correctly.
-  let autoT = Math.random() * 10;
-  let mouseOffset = 0;
+  // ---- Bubbles rising from the waterline ----
+  const bubbleWrap = document.getElementById('ocean-bubbles');
+  function spawnBubble() {
+    const b = document.createElement('div');
+    b.className = 'bubble';
+    b.style.left = (10 + Math.random() * 80) + '%';
+    const dur = 3 + Math.random() * 2.5;
+    b.style.animationDuration = dur + 's';
+    bubbleWrap.appendChild(b);
+    setTimeout(() => b.remove(), dur * 1000 + 100);
+  }
+  setInterval(spawnBubble, 900);
+
+  // ---- Ship: slow autonomous side-to-side drift + mouse parallax ----
+  const shipWrap = document.getElementById('ship-wrap');
+  const shipWake = document.getElementById('ship-wake');
+  let driftX = 0, driftDir = 1;
+  let mouseX = 0;
+
   function animateShip() {
-    autoT += 0.006;
-    const autoX = Math.sin(autoT) * 34; // gentle side-to-side sailing range, px
-    const totalX = autoX + mouseOffset;
-    const x = `calc(-50% + ${totalX}px)`;
-    ship.style.transform = `translateX(${x})`;
-    wake.style.transform = `translateX(${x})`;
+    driftX += driftDir * 0.15;
+    if (driftX > 60 || driftX < -60) driftDir *= -1;
+    const totalX = driftX + mouseX;
+    shipWrap.style.left = `calc(50% + ${totalX}px)`;
+    shipWake.style.left = `calc(50% + ${totalX}px)`;
     requestAnimationFrame(animateShip);
   }
   requestAnimationFrame(animateShip);
 
-  scene.addEventListener('mousemove', (e) => {
+  scene.addEventListener('mousemove', function (e) {
     const rect = scene.getBoundingClientRect();
-    const relX = (e.clientX - rect.left) / rect.width - 0.5; // -0.5..0.5
-    mouseOffset = relX * 40;
+    const rel = (e.clientX - rect.left) / rect.width; // 0..1
+    mouseX = (rel - 0.5) * 40; // gentle parallax, +/-20px
   });
-  scene.addEventListener('mouseleave', () => { mouseOffset = 0; });
+  scene.addEventListener('mouseleave', function () { mouseX = 0; });
 
-  // Click ripple
-  scene.addEventListener('click', (e) => {
+  // ---- Click ripple in the water ----
+  scene.addEventListener('click', function (e) {
     const rect = scene.getBoundingClientRect();
     const ripple = document.createElement('div');
     ripple.className = 'click-ripple';
     ripple.style.left = (e.clientX - rect.left) + 'px';
     ripple.style.top = (e.clientY - rect.top) + 'px';
     scene.appendChild(ripple);
-    setTimeout(() => ripple.remove(), 900);
+    setTimeout(() => ripple.remove(), 950);
   });
+})();
 </script>
 {% endblock %}
