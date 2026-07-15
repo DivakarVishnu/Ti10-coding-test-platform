@@ -241,7 +241,7 @@ def question_page(qid):
         flash("This question isn't available to you yet.", "error")
         return redirect(url_for("dashboard"))
 
- settings = Settings.get()
+settings = Settings.get()
     draft = Draft.query.filter_by(student_id=session["student_id"], question_id=qid).first()
     existing_submission = Submission.query.filter_by(student_id=session["student_id"], question_id=qid).first()
     allowed = q.allowed_language_ids()
