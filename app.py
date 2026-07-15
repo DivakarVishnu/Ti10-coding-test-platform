@@ -132,7 +132,7 @@ def register():
             flash("An account with this register number already exists.", "error")
             return redirect(url_for("register"))
 
-       student = Student(name=name, email=email, register_no=register_no, year=year or None, status="pending")
+        student = Student(name=name, email=email, register_no=register_no, year=year or None, status="pending")
         student.set_password(password)
         db.session.add(student)
         db.session.commit()
