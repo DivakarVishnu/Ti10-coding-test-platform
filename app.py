@@ -17,6 +17,7 @@ from models import (
     Submission, Draft, QuestionAttempt, utcnow
 )
 import judge0_client as judge0
+from datetime import timedelta
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -54,6 +55,15 @@ def _check_db():
 
 
 LANGUAGES = judge0.LANGUAGES
+
+
+@app.template_filter("ist")
+def to_ist(dt):
+    """Converts a naive UTC datetime to IST for display."""
+    if not dt:
+        return ""
+    ist_dt = dt + timedelta(hours=5, minutes=30)
+    return ist_dt.strftime("%d %b %Y, %I:%M %p")
 
 UPLOAD_DIR = os.path.join(app.static_folder, "uploads", "questions")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -101,6 +111,7 @@ def register():
         name = request.form.get("name", "").strip()
         email = request.form.get("email", "").strip().lower()
         register_no = request.form.get("register_no", "").strip()
+        year = request.form.get("year", "").strip()
         password = request.form.get("password", "")
         confirm = request.form.get("confirm_password", "")
 
@@ -121,7 +132,7 @@ def register():
             flash("An account with this register number already exists.", "error")
             return redirect(url_for("register"))
 
-        student = Student(name=name, email=email, register_no=register_no, status="pending")
+       student = Student(name=name, email=email, register_no=register_no, year=year or None, status="pending")
         student.set_password(password)
         db.session.add(student)
         db.session.commit()
@@ -524,7 +535,7 @@ def admin_dashboard():
     submissions_count = Submission.query.count()
     settings = Settings.get()
     years = sorted(set(x.year for x in Question.query.all() if x.year))
-    return render_template(
+return render_template(
         "admin_dashboard.html",
         questions=questions,
         students_count=students_count,
@@ -533,6 +544,7 @@ def admin_dashboard():
         settings=settings,
         years=years,
         year_filter=year_filter,
+        LANGUAGES=LANGUAGES,
     )
 
 
@@ -753,24 +765,36 @@ def admin_export_csv():
     buf = io.StringIO()
     writer = csv.writer(buf)
     writer.writerow([
-        "Student Name", "Register No", "Question", "Language",
+        "Student Name", "Register No", "Year", "Question", "Language",
         "Score", "Max Score", "Passed", "Total", "Tab Switches",
-        "Auto-Submitted", "Reason", "Submitted At"
+        "Auto-Submitted", "Reason", "Submitted At (IST)"
     ])
     for s in submissions:
-        writer.writerow([
-            s.student.name, s.student.register_no, s.question.title,
-            LANGUAGES.get(s.language_id, s.language_id),
-            s.score, s.max_score, s.passed_count, s.total_count,
-            s.tab_switches, "Yes" if s.auto_submitted else "No",
-            s.auto_submit_reason or "", s.submitted_at.strftime("%Y-%m-%d %H:%M:%S"),
-        ])
+        try:
+            writer.writerow([
+                s.student.name if s.student else "",
+                s.student.register_no if s.student else "",
+                s.student.year if s.student and s.student.year else "",
+                s.question.title if s.question else "",
+                LANGUAGES.get(s.language_id, s.language_id),
+                s.score if s.score is not None else 0,
+                s.max_score if s.max_score is not None else 0,
+                s.passed_count if s.passed_count is not None else 0,
+                s.total_count if s.total_count is not None else 0,
+                s.tab_switches if s.tab_switches is not None else 0,
+                "Yes" if s.auto_submitted else "No",
+                s.auto_submit_reason or "",
+                to_ist(s.submitted_at) if s.submitted_at else "",
+            ])
+        except Exception:
+            # Skip a malformed row rather than crashing the whole report
+            continue
 
     output = buf.getvalue()
     return Response(
         output,
         mimetype="text/csv",
-        headers={"Content-Disposition": "attachment; filename=submissions.csv"},
+        headers={"Content-Disposition": "attachment; filename=ti10_submissions_report.csv"},
     )
 
 

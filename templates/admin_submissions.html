@@ -37,7 +37,7 @@
       <td>{{ s.passed_count }} / {{ s.total_count }}</td>
       <td>{% if s.tab_switches %}<span class="text-danger">{{ s.tab_switches }}</span>{% else %}0{% endif %}</td>
       <td>{% if s.auto_submitted %}<span class="badge bg-warning">{{ s.auto_submit_reason }}</span>{% else %}—{% endif %}</td>
-      <td>{{ s.submitted_at.strftime('%d %b %H:%M:%S') }}</td>
+      <td>{{ s.submitted_at | ist }}</td>
       <td><a href="{{ url_for('admin_view_submission', sub_id=s.id) }}" class="btn btn-sm btn-outline-primary">View Code</a></td>
     </tr>
     {% else %}

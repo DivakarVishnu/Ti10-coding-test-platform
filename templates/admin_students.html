@@ -37,7 +37,7 @@
           <button class="btn btn-sm btn-outline-secondary">Set</button>
         </form>
       </td>
-      <td>{{ s.created_at.strftime('%d %b %Y, %H:%M') }}</td>
+      <td>{{ s.created_at | ist }}</td>
       <td class="text-nowrap">
         {% if status_filter == 'pending' %}
           <form method="POST" action="{{ url_for('admin_approve_student', sid=s.id) }}" class="d-inline-flex align-items-center gap-1">
