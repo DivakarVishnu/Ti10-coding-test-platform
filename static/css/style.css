@@ -251,6 +251,7 @@ pre {
 }
 
 /* ---------------------------------- Ocean / ship login scene ---------------------------------- */
+/* ---------------------------------- Ocean / ship login scene ---------------------------------- */
 .ocean-scene {
   position: relative;
   height: 240px;
@@ -288,7 +289,79 @@ pre {
   50% { opacity: 0.9; transform: scale(1.6); }
 }
 
-/* Ship */
+/* Drifting clouds (horizon depth) */
+.ocean-clouds { position: absolute; inset: 0; z-index: 1; overflow: hidden; }
+.cloud {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(233, 213, 255, 0.10);
+  filter: blur(2px);
+}
+.cloud::before, .cloud::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  background: inherit;
+  filter: inherit;
+}
+.cloud-1 { width: 70px; height: 22px; top: 12%; animation: cloudDrift 34s linear infinite; }
+.cloud-1::before { width: 40px; height: 40px; top: -20px; left: 8px; }
+.cloud-1::after { width: 30px; height: 30px; top: -14px; left: 34px; }
+.cloud-2 { width: 50px; height: 16px; top: 28%; animation: cloudDrift 46s linear infinite; animation-delay: -12s; opacity: 0.7; }
+.cloud-2::before { width: 28px; height: 28px; top: -14px; left: 6px; }
+.cloud-2::after { width: 22px; height: 22px; top: -10px; left: 24px; }
+.cloud-3 { width: 60px; height: 18px; top: 8%; animation: cloudDrift 52s linear infinite; animation-delay: -30s; opacity: 0.5; }
+.cloud-3::before { width: 32px; height: 32px; top: -16px; left: 6px; }
+.cloud-3::after { width: 26px; height: 26px; top: -12px; left: 28px; }
+@keyframes cloudDrift {
+  0% { left: -15%; }
+  100% { left: 115%; }
+}
+
+/* Seagulls */
+.ocean-birds { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+.bird {
+  position: absolute;
+  font-size: 14px;
+  color: rgba(233, 213, 255, 0.55);
+  animation: birdFly linear forwards, birdBob 1.4s ease-in-out infinite;
+}
+.bird::before { content: '^'; }
+@keyframes birdFly {
+  0% { left: -5%; }
+  100% { left: 105%; }
+}
+@keyframes birdBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+/* Lighthouse, left edge */
+.lighthouse {
+  position: absolute;
+  left: 4%;
+  bottom: 8px;
+  width: 22px;
+  z-index: 3;
+  opacity: 0.85;
+}
+.lighthouse svg { width: 100%; height: auto; display: block; }
+.lighthouse-beam {
+  position: absolute;
+  top: 6px; left: 50%;
+  width: 3px; height: 3px;
+  border-radius: 50%;
+  background: #fde68a;
+  box-shadow: 0 0 6px 2px #fde68a;
+  transform: translateX(-50%);
+  animation: beaconPulse 1.8s ease-in-out infinite;
+}
+@keyframes beaconPulse {
+  0%, 100% { opacity: 0.3; box-shadow: 0 0 4px 1px #fde68a; }
+  50% { opacity: 1; box-shadow: 0 0 12px 4px #fde68a; }
+}
+
+/* Ship (position is driven by JS: autonomous sail drift + mouse parallax combined) */
 .ship-wrap {
   position: absolute;
   left: 50%;
@@ -296,7 +369,6 @@ pre {
   transform: translateX(-50%);
   z-index: 4;
   animation: shipBob 3.2s ease-in-out infinite;
-  transition: transform 0.35s ease-out;
   filter: drop-shadow(0 10px 14px rgba(0,0,0,.5)) drop-shadow(0 0 18px var(--accent-glow));
   pointer-events: none;
 }
@@ -306,21 +378,25 @@ pre {
 }
 .ship-wrap svg { width: 92px; height: auto; display: block; }
 
-/* Wake ripple trailing the ship */
+/* Wake ripple trailing the ship — outer div positioned by JS (tracks ship),
+   inner div handles the pulse animation so the two don't fight over `transform`. */
 .ship-wake {
   position: absolute;
   left: 50%; top: 128px;
   width: 120px; height: 14px;
   transform: translateX(-50%);
-  border-radius: 50%;
-  background: radial-gradient(ellipse, rgba(216,180,254,0.35), transparent 70%);
-  animation: wakePulse 3.2s ease-in-out infinite;
   z-index: 3;
   pointer-events: none;
 }
+.ship-wake-inner {
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(216,180,254,0.35), transparent 70%);
+  animation: wakePulse 3.2s ease-in-out infinite;
+}
 @keyframes wakePulse {
-  0%, 100% { opacity: 0.3; transform: translateX(-50%) scaleX(0.9); }
-  50% { opacity: 0.65; transform: translateX(-50%) scaleX(1.15); }
+  0%, 100% { opacity: 0.3; transform: scaleX(0.9); }
+  50% { opacity: 0.65; transform: scaleX(1.15); }
 }
 
 /* Layered waves (SVG) */
@@ -378,6 +454,31 @@ pre {
   .ocean-scene { height: 180px; }
   .ship-wrap { top: 44px; }
   .ship-wrap svg { width: 70px; }
+  .lighthouse { display: none; }
+}
+
+/* ---------------------------------- Results panel at top ---------------------------------- */
+.results-panel-top { margin-bottom: 16px; }
+.results-panel-top:empty { display: none; }
+
+/* ---------------------------------- Bigger, LeetCode-style editor ---------------------------------- */
+.code-editor-lg { height: 78vh; min-height: 560px; }
+@media (max-width: 991px) {
+  .code-editor-lg { height: 460px; min-height: 460px; }
+}
+
+/* ---------------------------------- Submit celebration ---------------------------------- */
+.confetti-piece {
+  position: fixed;
+  top: -10px;
+  width: 8px; height: 8px;
+  z-index: 3000;
+  pointer-events: none;
+  animation: confettiFall linear forwards;
+}
+@keyframes confettiFall {
+  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(105vh) rotate(720deg); opacity: 0.3; }
 }
 
 /* ---------------------------------- Results panel at top ---------------------------------- */

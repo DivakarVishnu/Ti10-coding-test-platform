@@ -5,8 +5,23 @@
 <div class="ocean-scene" id="ocean-scene">
   <div class="ocean-moon"></div>
   <div class="ocean-stars" id="ocean-stars"></div>
+  <div class="ocean-clouds">
+    <div class="cloud cloud-1"></div>
+    <div class="cloud cloud-2"></div>
+    <div class="cloud cloud-3"></div>
+  </div>
+  <div class="ocean-birds" id="ocean-birds"></div>
 
-  <div class="ship-wake"></div>
+  <div class="lighthouse">
+    <svg viewBox="0 0 30 60" xmlns="http://www.w3.org/2000/svg">
+      <rect x="12" y="8" width="6" height="42" fill="#d8b4fe"/>
+      <path d="M8 8 L22 8 L18 2 L12 2 Z" fill="#e9d5ff"/>
+      <rect x="6" y="50" width="18" height="6" fill="#7c3aed"/>
+    </svg>
+    <div class="lighthouse-beam"></div>
+  </div>
+
+  <div class="ship-wake" id="ship-wake"><div class="ship-wake-inner"></div></div>
   <div class="ship-wrap" id="ship-wrap">
     <svg viewBox="0 0 100 90" xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -19,13 +34,9 @@
           <stop offset="100%" stop-color="#d8b4fe"/>
         </linearGradient>
       </defs>
-      <!-- mast -->
       <rect x="48" y="10" width="3" height="46" fill="#e9d5ff"/>
-      <!-- main sail -->
       <path d="M51 14 L51 52 L20 50 Q34 30 51 14 Z" fill="url(#sailGrad)" opacity="0.95"/>
-      <!-- jib sail -->
       <path d="M49 22 L49 50 L72 48 Q60 34 49 22 Z" fill="url(#sailGrad)" opacity="0.75"/>
-      <!-- hull -->
       <path d="M10 56 L90 56 L78 78 Q50 86 22 78 Z" fill="url(#hullGrad)"/>
       <rect x="10" y="52" width="80" height="6" rx="2" fill="#a855f7"/>
     </svg>
@@ -82,7 +93,9 @@
 <script>
   const scene = document.getElementById('ocean-scene');
   const ship = document.getElementById('ship-wrap');
+  const wake = document.getElementById('ship-wake');
   const starsLayer = document.getElementById('ocean-stars');
+  const birdsLayer = document.getElementById('ocean-birds');
 
   // Scatter twinkling stars
   for (let i = 0; i < 26; i++) {
@@ -106,15 +119,40 @@
   }
   setInterval(spawnBubble, 500);
 
-  // Ship gently follows mouse X (parallax), resets when mouse leaves
+  // Occasional seagulls flying across
+  function spawnBird() {
+    const b = document.createElement('div');
+    b.className = 'bird';
+    b.style.top = (10 + Math.random() * 20) + '%';
+    const duration = 9 + Math.random() * 6;
+    b.style.animationDuration = duration + 's, 1.4s';
+    birdsLayer.appendChild(b);
+    setTimeout(() => b.remove(), duration * 1000 + 200);
+  }
+  setInterval(spawnBird, 7000);
+  setTimeout(spawnBird, 1500);
+
+  // Ship: autonomous gentle sailing drift + mouse parallax, combined every frame.
+  // Wake tracks the ship's exact position so it always trails correctly.
+  let autoT = Math.random() * 10;
+  let mouseOffset = 0;
+  function animateShip() {
+    autoT += 0.006;
+    const autoX = Math.sin(autoT) * 34; // gentle side-to-side sailing range, px
+    const totalX = autoX + mouseOffset;
+    const x = `calc(-50% + ${totalX}px)`;
+    ship.style.transform = `translateX(${x})`;
+    wake.style.transform = `translateX(${x})`;
+    requestAnimationFrame(animateShip);
+  }
+  requestAnimationFrame(animateShip);
+
   scene.addEventListener('mousemove', (e) => {
     const rect = scene.getBoundingClientRect();
     const relX = (e.clientX - rect.left) / rect.width - 0.5; // -0.5..0.5
-    ship.style.transform = `translateX(calc(-50% + ${relX * 40}px))`;
+    mouseOffset = relX * 40;
   });
-  scene.addEventListener('mouseleave', () => {
-    ship.style.transform = 'translateX(-50%)';
-  });
+  scene.addEventListener('mouseleave', () => { mouseOffset = 0; });
 
   // Click ripple
   scene.addEventListener('click', (e) => {
