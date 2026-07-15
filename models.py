@@ -32,6 +32,7 @@ class Student(db.Model):
     register_no = db.Column(db.String(60), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
     status = db.Column(db.String(20), default="pending")  # pending | approved | rejected
+    year = db.Column(db.String(20), nullable=True)  # e.g. "2027" — set by admin
     created_at = db.Column(db.DateTime, default=utcnow)
 
     submissions = db.relationship("Submission", backref="student", lazy=True)
@@ -85,6 +86,9 @@ class Question(db.Model):
     question_time_limit_min = db.Column(db.Integer, nullable=True)  # None = no per-question timer
     allowed_languages = db.Column(db.String(100), default="71,62,54,50")
     is_published = db.Column(db.Boolean, default=True)
+    year = db.Column(db.String(20), nullable=True)          # None/blank = visible to all years
+    is_released = db.Column(db.Boolean, default=False)      # admin must manually release
+    released_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=utcnow)
 
     test_cases = db.relationship(
@@ -100,6 +104,9 @@ class Question(db.Model):
 
     def hidden_test_cases(self):
         return [tc for tc in self.test_cases if tc.is_hidden]
+
+    def visible_to_year(self, year):
+        return not self.year or not year or self.year == year
 
 
 class TestCase(db.Model):

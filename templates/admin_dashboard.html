@@ -63,22 +63,43 @@
   </div>
 </div>
 
+{% if years %}
+<div class="btn-group mb-3 flex-wrap" role="group">
+  <a href="{{ url_for('admin_dashboard') }}" class="btn btn-sm {{ 'btn-primary' if not year_filter else 'btn-outline-secondary' }}">All Years</a>
+  {% for y in years %}
+    <a href="{{ url_for('admin_dashboard', year=y) }}" class="btn btn-sm {{ 'btn-primary' if year_filter == y else 'btn-outline-secondary' }}">{{ y }}</a>
+  {% endfor %}
+</div>
+{% endif %}
+
 <div class="table-responsive">
 <table class="table table-bordered bg-white">
   <thead><tr>
-    <th>Title</th><th>Marks</th><th>Timer</th><th>Test Cases</th><th>Languages</th><th>Published</th><th></th>
+    <th>Title</th><th>Year</th><th>Marks</th><th>Timer</th><th>Test Cases</th><th>Languages</th><th>Published</th><th>Released</th><th></th>
   </tr></thead>
   <tbody>
     {% for q in questions %}
     <tr>
       <td>{{ q.title }}</td>
+      <td>{% if q.year %}<span class="badge bg-info text-dark">{{ q.year }}</span>{% else %}<span class="text-muted small">All</span>{% endif %}</td>
       <td>{{ q.marks }}</td>
       <td>{% if q.question_time_limit_min %}{{ q.question_time_limit_min }} min{% else %}<span class="text-muted">—</span>{% endif %}</td>
       <td>{{ q.test_cases|length }} ({{ q.hidden_test_cases()|length }} hidden)</td>
       <td>{{ q.allowed_languages }}</td>
       <td>{% if q.is_published %}<span class="badge bg-success">Yes</span>{% else %}<span class="badge bg-secondary">No</span>{% endif %}</td>
+      <td>{% if q.is_released %}<span class="badge bg-success">Live</span>{% else %}<span class="badge bg-secondary">Hidden</span>{% endif %}</td>
       <td class="text-nowrap">
         <a href="{{ url_for('admin_edit_question', qid=q.id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+        {% if q.is_released %}
+          <form method="POST" action="{{ url_for('admin_unrelease_question', qid=q.id) }}" class="d-inline">
+            <button class="btn btn-sm btn-outline-warning">Hide</button>
+          </form>
+        {% else %}
+          <form method="POST" action="{{ url_for('admin_release_question', qid=q.id) }}" class="d-inline"
+                onsubmit="return confirm('Release this question to students now?')">
+            <button class="btn btn-sm btn-success">Release Now</button>
+          </form>
+        {% endif %}
         <form method="POST" action="{{ url_for('admin_delete_question', qid=q.id) }}" class="d-inline"
               onsubmit="return confirm('Delete this question and all its submissions?')">
           <button class="btn btn-sm btn-outline-danger">Delete</button>
@@ -87,7 +108,7 @@
       </td>
     </tr>
     {% else %}
-    <tr><td colspan="7" class="text-muted">No questions yet.</td></tr>
+    <tr><td colspan="9" class="text-muted">No questions yet.</td></tr>
     {% endfor %}
   </tbody>
 </table>

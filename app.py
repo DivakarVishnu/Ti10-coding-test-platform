@@ -171,7 +171,9 @@ def logout():
 @student_required
 def dashboard():
     settings = Settings.get()
-    questions = Question.query.filter_by(is_published=True).order_by(Question.id).all()
+    student = Student.query.get(session["student_id"])
+    all_questions = Question.query.filter_by(is_published=True, is_released=True).order_by(Question.id).all()
+    questions = [q for q in all_questions if q.visible_to_year(student.year)]
 
     best_scores = {}
     subs = Submission.query.filter_by(student_id=session["student_id"]).all()
@@ -186,6 +188,7 @@ def dashboard():
         best_scores=best_scores,
         settings=settings,
         is_open=settings.is_open(),
+        student=student,
     )
 
 
@@ -203,10 +206,24 @@ def _question_deadline_seconds(q, student_id):
     return max(0, int(remaining))
 
 
+def _check_question_access(q, student):
+    """Returns True if this student is currently allowed to see/attempt this question."""
+    if not q.is_released:
+        return False
+    if not q.visible_to_year(student.year):
+        return False
+    return True
+
+
 @app.route("/question/<int:qid>")
 @student_required
 def question_page(qid):
     q = Question.query.get_or_404(qid)
+    student = Student.query.get(session["student_id"])
+    if not _check_question_access(q, student):
+        flash("This question isn't available to you yet.", "error")
+        return redirect(url_for("dashboard"))
+
     settings = Settings.get()
     draft = Draft.query.filter_by(student_id=session["student_id"], question_id=qid).first()
     allowed = q.allowed_language_ids()
@@ -277,6 +294,10 @@ def _run_test_cases(code, language_id, test_cases, cpu_time_limit, memory_limit)
 @student_required
 def run_code_route(qid):
     q = Question.query.get_or_404(qid)
+    student = Student.query.get(session["student_id"])
+    if not _check_question_access(q, student):
+        return jsonify({"error": "This question isn't available to you."}), 403
+
     settings = Settings.get()
     if not settings.is_open():
         return jsonify({"error": "The test window is closed."}), 403
@@ -314,6 +335,10 @@ def run_code_route(qid):
 @student_required
 def submit_code(qid):
     q = Question.query.get_or_404(qid)
+    student = Student.query.get(session["student_id"])
+    if not _check_question_access(q, student):
+        return jsonify({"error": "This question isn't available to you."}), 403
+
     settings = Settings.get()
     if not settings.is_open():
         return jsonify({"error": "The test window is closed."}), 403
@@ -416,11 +441,13 @@ def admin_students():
         query = query.filter_by(status=status_filter)
     students = query.order_by(Student.created_at.desc()).all()
     pending_count = Student.query.filter_by(status="pending").count()
+    years = sorted(set(s.year for s in Student.query.all() if s.year))
     return render_template(
         "admin_students.html",
         students=students,
         status_filter=status_filter,
         pending_count=pending_count,
+        years=years,
     )
 
 
@@ -429,6 +456,9 @@ def admin_students():
 def admin_approve_student(sid):
     s = Student.query.get_or_404(sid)
     s.status = "approved"
+    year = request.form.get("year", "").strip()
+    if year:
+        s.year = year
     db.session.commit()
     flash(f"{s.name} approved.", "success")
     return redirect(url_for("admin_students", status="pending"))
@@ -444,17 +474,56 @@ def admin_reject_student(sid):
     return redirect(url_for("admin_students", status="pending"))
 
 
+@app.route("/admin/students/<int:sid>/set-year", methods=["POST"])
+@admin_required
+def admin_set_student_year(sid):
+    s = Student.query.get_or_404(sid)
+    s.year = request.form.get("year", "").strip() or None
+    db.session.commit()
+    flash(f"Year updated for {s.name}.", "success")
+    return redirect(url_for("admin_students", status=request.form.get("status_filter", "approved")))
+
+
+@app.route("/admin/students/clear-data", methods=["POST"])
+@admin_required
+def admin_clear_student_data():
+    year = request.form.get("year", "").strip()
+    q = Student.query
+    if year:
+        q = q.filter_by(year=year)
+    student_ids = [s.id for s in q.all()]
+    if not student_ids:
+        flash("No students found for that year.", "error")
+        return redirect(url_for("admin_students", status="approved"))
+
+    Submission.query.filter(Submission.student_id.in_(student_ids)).delete(synchronize_session=False)
+    Draft.query.filter(Draft.student_id.in_(student_ids)).delete(synchronize_session=False)
+    QuestionAttempt.query.filter(QuestionAttempt.student_id.in_(student_ids)).delete(synchronize_session=False)
+    db.session.commit()
+    flash(
+        f"Cleared submissions/drafts for {len(student_ids)} student(s)"
+        f"{' in year ' + year if year else ''}. Accounts kept.",
+        "success",
+    )
+    return redirect(url_for("admin_students", status="approved"))
+
+
 # --------------------------------------------------------------------------
 # Admin dashboard / questions
 # --------------------------------------------------------------------------
 @app.route("/admin")
 @admin_required
 def admin_dashboard():
-    questions = Question.query.order_by(Question.id.desc()).all()
+    year_filter = request.args.get("year", "").strip()
+    q = Question.query
+    if year_filter:
+        q = q.filter_by(year=year_filter)
+    questions = q.order_by(Question.id.desc()).all()
     students_count = Student.query.filter_by(status="approved").count()
     pending_count = Student.query.filter_by(status="pending").count()
     submissions_count = Submission.query.count()
     settings = Settings.get()
+    years = sorted(set(x.year for x in Question.query.all() if x.year))
     return render_template(
         "admin_dashboard.html",
         questions=questions,
@@ -462,6 +531,8 @@ def admin_dashboard():
         pending_count=pending_count,
         submissions_count=submissions_count,
         settings=settings,
+        years=years,
+        year_filter=year_filter,
     )
 
 
@@ -494,6 +565,7 @@ def admin_new_question():
         languages = request.form.getlist("languages")
         is_published = bool(request.form.get("is_published"))
         q_time_limit = request.form.get("question_time_limit_min", "").strip()
+        year = request.form.get("year", "").strip() or None
 
         if not title or not description or not languages:
             flash("Title, description and at least one language are required.", "error")
@@ -516,6 +588,7 @@ def admin_new_question():
             question_time_limit_min=int(q_time_limit) if q_time_limit else None,
             allowed_languages=",".join(languages),
             is_published=is_published,
+            year=year,
         )
         db.session.add(q)
         db.session.flush()
@@ -533,7 +606,7 @@ def admin_new_question():
             ))
 
         db.session.commit()
-        flash("Question created.", "success")
+        flash("Question created. Use 'Release Now' on the dashboard when you're ready for students to see it.", "success")
         return redirect(url_for("admin_dashboard"))
 
     return render_template("admin_question_form.html", languages=LANGUAGES, question=None)
@@ -552,6 +625,7 @@ def admin_edit_question(qid):
         q.memory_limit_kb = int(request.form.get("memory_limit_kb", 128000))
         q.allowed_languages = ",".join(request.form.getlist("languages"))
         q.is_published = bool(request.form.get("is_published"))
+        q.year = request.form.get("year", "").strip() or None
         q_time_limit = request.form.get("question_time_limit_min", "").strip()
         q.question_time_limit_min = int(q_time_limit) if q_time_limit else None
 
@@ -593,6 +667,27 @@ def admin_delete_question(qid):
     db.session.delete(q)
     db.session.commit()
     flash("Question deleted.", "success")
+    return redirect(url_for("admin_dashboard"))
+
+
+@app.route("/admin/question/<int:qid>/release", methods=["POST"])
+@admin_required
+def admin_release_question(qid):
+    q = Question.query.get_or_404(qid)
+    q.is_released = True
+    q.released_at = utcnow()
+    db.session.commit()
+    flash(f'"{q.title}" released to students.', "success")
+    return redirect(url_for("admin_dashboard"))
+
+
+@app.route("/admin/question/<int:qid>/unrelease", methods=["POST"])
+@admin_required
+def admin_unrelease_question(qid):
+    q = Question.query.get_or_404(qid)
+    q.is_released = False
+    db.session.commit()
+    flash(f'"{q.title}" hidden from students.', "success")
     return redirect(url_for("admin_dashboard"))
 
 

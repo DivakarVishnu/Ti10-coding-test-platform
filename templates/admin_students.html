@@ -20,7 +20,7 @@
 <table class="table table-bordered bg-white">
   <thead>
     <tr>
-      <th>Name</th><th>Email</th><th>Register No</th><th>Registered</th><th></th>
+      <th>Name</th><th>Email</th><th>Register No</th><th>Year</th><th>Registered</th><th></th>
     </tr>
   </thead>
   <tbody>
@@ -29,10 +29,19 @@
       <td>{{ s.name }}</td>
       <td>{{ s.email }}</td>
       <td>{{ s.register_no }}</td>
+      <td>
+        <form method="POST" action="{{ url_for('admin_set_student_year', sid=s.id) }}" class="d-flex gap-1">
+          <input type="hidden" name="status_filter" value="{{ status_filter }}">
+          <input type="text" name="year" class="form-control form-control-sm" style="width:90px;"
+                 value="{{ s.year or '' }}" placeholder="e.g. 2027">
+          <button class="btn btn-sm btn-outline-secondary">Set</button>
+        </form>
+      </td>
       <td>{{ s.created_at.strftime('%d %b %Y, %H:%M') }}</td>
       <td class="text-nowrap">
         {% if status_filter == 'pending' %}
-          <form method="POST" action="{{ url_for('admin_approve_student', sid=s.id) }}" class="d-inline">
+          <form method="POST" action="{{ url_for('admin_approve_student', sid=s.id) }}" class="d-inline-flex align-items-center gap-1">
+            <input type="text" name="year" class="form-control form-control-sm" style="width:90px;" placeholder="Year">
             <button class="btn btn-sm btn-success">Approve</button>
           </form>
           <form method="POST" action="{{ url_for('admin_reject_student', sid=s.id) }}" class="d-inline">
@@ -48,8 +57,25 @@
       </td>
     </tr>
     {% else %}
-    <tr><td colspan="5" class="text-muted">No students in this list.</td></tr>
+    <tr><td colspan="6" class="text-muted">No students in this list.</td></tr>
     {% endfor %}
   </tbody>
 </table>
+
+<div class="card mt-4 border-danger">
+  <div class="card-body">
+    <h6 class="text-danger">Clear Submission Data</h6>
+    <p class="text-muted small">Deletes submissions, drafts and question timers for the selected year (or everyone if left blank). Student accounts are kept.</p>
+    <form method="POST" action="{{ url_for('admin_clear_student_data') }}" class="d-flex gap-2"
+          onsubmit="return confirm('This permanently deletes submissions/drafts for the selected year. Continue?')">
+      <select name="year" class="form-select w-auto">
+        <option value="">All years</option>
+        {% for y in years %}
+          <option value="{{ y }}">{{ y }}</option>
+        {% endfor %}
+      </select>
+      <button class="btn btn-outline-danger">Clear Data</button>
+    </form>
+  </div>
+</div>
 {% endblock %}

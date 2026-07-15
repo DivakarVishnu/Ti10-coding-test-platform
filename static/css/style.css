@@ -250,4 +250,33 @@ pre {
   .timer-ring { width: 48px; height: 48px; }
 }
 
+/* ---------------------------------- Ocean / boat login animation ---------------------------------- */
+.ocean-scene { position: relative; height: 130px; overflow: hidden; margin-bottom: -20px; z-index: 0; }
+.boat-wrap { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); animation: boatBob 2.6s ease-in-out infinite; z-index: 3; }
+.boat { font-size: 48px; filter: drop-shadow(0 6px 6px rgba(0,0,0,.35)); }
+@keyframes boatBob {
+  0%, 100% { transform: translateX(-50%) translateY(0) rotate(-3deg); }
+  50% { transform: translateX(-50%) translateY(-10px) rotate(3deg); }
+}
+.wave {
+  position: absolute; left: -50%; width: 200%; height: 60px; bottom: 0;
+  background: repeating-linear-gradient(90deg, rgba(56,189,248,.35) 0 40px, rgba(56,189,248,.15) 40px 80px);
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+  animation: waveMove 6s linear infinite;
+}
+.wave2 { bottom: -8px; opacity: .7; animation-duration: 9s; animation-direction: reverse; }
+.wave3 { bottom: -16px; opacity: .5; animation-duration: 12s; }
+@keyframes waveMove {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-25%); }
+}
 
+/* ---------------------------------- Results panel at top ---------------------------------- */
+.results-panel-top { margin-bottom: 16px; }
+.results-panel-top:empty { display: none; }
+
+/* ---------------------------------- Bigger, LeetCode-style editor ---------------------------------- */
+.code-editor-lg { height: 78vh; min-height: 560px; }
+@media (max-width: 991px) {
+  .code-editor-lg { height: 460px; min-height: 460px; }
+}

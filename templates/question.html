@@ -32,6 +32,8 @@
   </div>
 {% endif %}
 
+<div id="results-panel" class="results-panel-top"></div>
+
 <div class="row">
   <div class="col-lg-5">
     {% if q.image_filename %}
@@ -58,8 +60,6 @@
       </div>
     </div>
     {% endif %}
-
-    <div id="results-panel"></div>
   </div>
 
   <div class="col-lg-7">
@@ -76,8 +76,7 @@
       </div>
     </div>
 
-    <div id="editor" style="height: 480px; border: 1px solid var(--card-border); border-radius: 10px; overflow:hidden;"></div>
-  </div>
+<div id="editor" class="code-editor-lg" style="border: 1px solid var(--card-border); border-radius: 10px; overflow:hidden;"></div>  </div>
 </div>
 
 <script>
@@ -114,6 +113,15 @@
     const div = document.createElement('div');
     div.innerText = str;
     return div.innerHTML;
+  }
+
+  function launchConfetti(bigCelebration) {
+    if (typeof confetti !== 'function') return;
+    confetti({ particleCount: bigCelebration ? 160 : 80, spread: bigCelebration ? 100 : 60, origin: { y: 0.6 } });
+    if (bigCelebration) {
+      setTimeout(() => confetti({ particleCount: 100, angle: 60, spread: 55, origin: { x: 0 } }), 200);
+      setTimeout(() => confetti({ particleCount: 100, angle: 120, spread: 55, origin: { x: 1 } }), 400);
+    }
   }
 
   // ==================================================================
@@ -277,9 +285,10 @@
         panel.innerHTML = `<div class="alert alert-danger">${escapeHtml(data.error)}</div>`;
         return data;
       }
-      let html = `<div class="alert alert-success">Score: ${data.score} / ${data.max_score}
+     let html = `<div class="alert alert-success">Score: ${data.score} / ${data.max_score}
         (${data.passed_count}/${data.total_count} test cases passed, including hidden ones)</div>`;
       panel.innerHTML = html;
+      launchConfetti(data.passed_count === data.total_count && data.total_count > 0);
       if (data.public_results && data.public_results.length) {
         const div = document.createElement('div');
         panel.appendChild(div);
