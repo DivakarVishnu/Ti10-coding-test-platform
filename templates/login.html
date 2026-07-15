@@ -2,12 +2,52 @@
 {% block title %}Login — Ti10{% endblock %}
 {% block content %}
 <div class="auth-wrapper">
-<div class="ocean-scene">
-  <div class="boat-wrap"><div class="boat">🚢</div></div>
-  <div class="wave wave1"></div>
-  <div class="wave wave2"></div>
-  <div class="wave wave3"></div>
+<div class="ocean-scene" id="ocean-scene">
+  <div class="ocean-moon"></div>
+  <div class="ocean-stars" id="ocean-stars"></div>
+
+  <div class="ship-wake"></div>
+  <div class="ship-wrap" id="ship-wrap">
+    <svg viewBox="0 0 100 90" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="hullGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#c084fc"/>
+          <stop offset="100%" stop-color="#7c3aed"/>
+        </linearGradient>
+        <linearGradient id="sailGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#f3f0fa"/>
+          <stop offset="100%" stop-color="#d8b4fe"/>
+        </linearGradient>
+      </defs>
+      <!-- mast -->
+      <rect x="48" y="10" width="3" height="46" fill="#e9d5ff"/>
+      <!-- main sail -->
+      <path d="M51 14 L51 52 L20 50 Q34 30 51 14 Z" fill="url(#sailGrad)" opacity="0.95"/>
+      <!-- jib sail -->
+      <path d="M49 22 L49 50 L72 48 Q60 34 49 22 Z" fill="url(#sailGrad)" opacity="0.75"/>
+      <!-- hull -->
+      <path d="M10 56 L90 56 L78 78 Q50 86 22 78 Z" fill="url(#hullGrad)"/>
+      <rect x="10" y="52" width="80" height="6" rx="2" fill="#a855f7"/>
+    </svg>
+  </div>
+
+  <div class="wave-layer wave-3">
+    <svg viewBox="0 0 1200 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,40 C150,80 350,0 600,40 C850,80 1050,0 1200,40 L1200,80 L0,80 Z" fill="rgba(124,58,237,0.35)"/>
+    </svg>
+  </div>
+  <div class="wave-layer wave-2">
+    <svg viewBox="0 0 1200 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,30 C200,70 400,10 600,35 C800,60 1000,10 1200,30 L1200,80 L0,80 Z" fill="rgba(168,85,247,0.45)"/>
+    </svg>
+  </div>
+  <div class="wave-layer wave-1">
+    <svg viewBox="0 0 1200 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,25 C180,55 420,5 600,28 C780,50 1020,5 1200,25 L1200,80 L0,80 Z" fill="rgba(88,28,135,0.85)"/>
+    </svg>
+  </div>
 </div>
+
 <div class="row justify-content-center w-100">
   <div class="col-md-5">
     <div class="card shadow-sm auth-card">
@@ -36,4 +76,55 @@
   </div>
 </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const scene = document.getElementById('ocean-scene');
+  const ship = document.getElementById('ship-wrap');
+  const starsLayer = document.getElementById('ocean-stars');
+
+  // Scatter twinkling stars
+  for (let i = 0; i < 26; i++) {
+    const star = document.createElement('div');
+    star.className = 'star';
+    star.style.left = Math.random() * 100 + '%';
+    star.style.top = Math.random() * 55 + '%';
+    star.style.animationDelay = (Math.random() * 2.6) + 's';
+    starsLayer.appendChild(star);
+  }
+
+  // Rising bubbles near the ship
+  function spawnBubble() {
+    const b = document.createElement('div');
+    b.className = 'bubble';
+    const centerX = scene.clientWidth / 2;
+    b.style.left = (centerX + (Math.random() * 60 - 30)) + 'px';
+    b.style.animationDuration = (2.5 + Math.random() * 2) + 's';
+    scene.appendChild(b);
+    setTimeout(() => b.remove(), 4500);
+  }
+  setInterval(spawnBubble, 500);
+
+  // Ship gently follows mouse X (parallax), resets when mouse leaves
+  scene.addEventListener('mousemove', (e) => {
+    const rect = scene.getBoundingClientRect();
+    const relX = (e.clientX - rect.left) / rect.width - 0.5; // -0.5..0.5
+    ship.style.transform = `translateX(calc(-50% + ${relX * 40}px))`;
+  });
+  scene.addEventListener('mouseleave', () => {
+    ship.style.transform = 'translateX(-50%)';
+  });
+
+  // Click ripple
+  scene.addEventListener('click', (e) => {
+    const rect = scene.getBoundingClientRect();
+    const ripple = document.createElement('div');
+    ripple.className = 'click-ripple';
+    ripple.style.left = (e.clientX - rect.left) + 'px';
+    ripple.style.top = (e.clientY - rect.top) + 'px';
+    scene.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 900);
+  });
+</script>
 {% endblock %}
