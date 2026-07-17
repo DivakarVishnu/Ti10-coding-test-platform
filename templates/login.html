@@ -110,6 +110,17 @@
     <p class="text-center">
       <a href="{{ url_for('admin_login') }}" class="text-muted small">Admin login</a>
     </p>
+    {% if settings.allow_guest_login %}
+    <div class="card mt-3 auth-card">
+      <div class="card-body">
+        <p class="text-muted small mb-2">Forgot your password? Log in with just your register number.</p>
+        <form method="POST" action="{{ url_for('guest_login') }}" class="d-flex gap-2">
+          <input type="text" name="register_no" class="form-control" placeholder="Register Number" required>
+          <button type="submit" class="btn btn-outline-light">Guest Login</button>
+        </form>
+      </div>
+    </div>
+    {% endif %}
   </div>
 </div>
 </div>

@@ -10,6 +10,12 @@
   <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 </head>
 <body>
+  {% block bg_scene %}
+  <div class="site-bg-scene">
+    <div class="site-moon"></div>
+    <div class="site-stars" id="site-stars"></div>
+  </div>
+  {% endblock %}
   <nav class="navbar navbar-dark bg-dark px-3 sticky-top">
     <span class="navbar-brand mb-0 h1">Ti10</span>
     <div class="d-flex align-items-center">
@@ -40,6 +46,19 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <script>
+    const siteStars = document.getElementById('site-stars');
+    if (siteStars) {
+      for (let i = 0; i < 40; i++) {
+        const star = document.createElement('div');
+        star.className = 'site-star';
+        star.style.left = Math.random() * 100 + '%';
+        star.style.top = Math.random() * 100 + '%';
+        star.style.animationDelay = (Math.random() * 3.2) + 's';
+        siteStars.appendChild(star);
+      }
+    }
+  </script>
   {% block scripts %}{% endblock %}
 </body>
 </html>

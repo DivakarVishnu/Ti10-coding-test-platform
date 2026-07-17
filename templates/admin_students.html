@@ -38,7 +38,14 @@
         </form>
       </td>
       <td>{{ s.created_at | ist }}</td>
-      <td class="text-nowrap">
+     <td class="text-nowrap">
+        {% if status_filter == 'approved' %}
+        <form method="POST" action="{{ url_for('admin_reset_student_password', sid=s.id) }}" class="d-inline-flex align-items-center gap-1 mb-1">
+          <input type="hidden" name="status_filter" value="{{ status_filter }}">
+          <input type="password" name="new_password" class="form-control form-control-sm" style="width:110px;" placeholder="New password" minlength="6">
+          <button class="btn btn-sm btn-outline-warning">Reset</button>
+        </form><br>
+        {% endif %}
         {% if status_filter == 'pending' %}
           <form method="POST" action="{{ url_for('admin_approve_student', sid=s.id) }}" class="d-inline-flex align-items-center gap-1">
             <input type="text" name="year" class="form-control form-control-sm" style="width:90px;" placeholder="Year">

@@ -55,6 +55,7 @@ class Settings(db.Model):
     start_time = db.Column(db.DateTime, nullable=True)
     end_time = db.Column(db.DateTime, nullable=True)
     max_tab_switches = db.Column(db.Integer, default=3)
+    allow_guest_login = db.Column(db.Boolean, default=False)
 
     @staticmethod
     def get():

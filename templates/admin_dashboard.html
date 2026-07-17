@@ -46,6 +46,13 @@
         <label class="form-label">Max Tab Switches</label>
         <input type="number" name="max_tab_switches" min="0" class="form-control" value="{{ settings.max_tab_switches }}">
       </div>
+      <div class="col-md-3 d-flex align-items-end">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" name="allow_guest_login" id="guestlogin"
+                 {% if settings.allow_guest_login %}checked{% endif %}>
+          <label class="form-check-label" for="guestlogin">Allow Guest Login (register no only)</label>
+        </div>
+      </div>
       <div class="col-12">
         <button class="btn btn-primary">Save Settings</button>
         <span class="text-muted small">Exceeding max tab switches / fullscreen exits auto-submits the student's current question.</span>
@@ -57,8 +64,9 @@
 <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
   <h5 class="mb-0">Questions</h5>
   <div>
-    <a href="{{ url_for('admin_students') }}" class="btn btn-outline-secondary btn-sm">Students</a>
+   <a href="{{ url_for('admin_students') }}" class="btn btn-outline-secondary btn-sm">Students</a>
     <a href="{{ url_for('admin_submissions') }}" class="btn btn-outline-secondary btn-sm">Submissions</a>
+    <a href="{{ url_for('admin_analytics') }}" class="btn btn-outline-secondary btn-sm">Analytics</a>
     <a href="{{ url_for('admin_new_question') }}" class="btn btn-primary btn-sm">+ New Question</a>
   </div>
 </div>

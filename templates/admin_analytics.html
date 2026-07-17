@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Analytics — Ti10 Admin{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <h4 class="mb-0">Result Analytics</h4>
+  <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary btn-sm">&larr; Dashboard</a>
+</div>
+
+{% if years %}
+<div class="btn-group mb-3 flex-wrap" role="group">
+  <a href="{{ url_for('admin_analytics') }}" class="btn btn-sm {{ 'btn-primary' if not year_filter else 'btn-outline-secondary' }}">All Years</a>
+  {% for y in years %}
+    <a href="{{ url_for('admin_analytics', year=y) }}" class="btn btn-sm {{ 'btn-primary' if year_filter == y else 'btn-outline-secondary' }}">{{ y }}</a>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="row mb-4 g-3">
+  <div class="col-6 col-md-3"><div class="card stat-tile"><div class="card-body">
+    <h6 class="text-muted mb-1">Students{% if year_filter %} ({{ year_filter }}){% endif %}</h6><h3>{{ total_students }}</h3>
+  </div></div></div>
+  <div class="col-6 col-md-3"><div class="card stat-tile"><div class="card-body">
+    <h6 class="text-muted mb-1">Attempted</h6><h3>{{ attempted_students }}</h3>
+  </div></div></div>
+  <div class="col-6 col-md-3"><div class="card stat-tile"><div class="card-body">
+    <h6 class="text-muted mb-1">Not Started</h6><h3>{{ total_students - attempted_students }}</h3>
+  </div></div></div>
+  <div class="col-6 col-md-3"><div class="card stat-tile"><div class="card-body">
+    <h6 class="text-muted mb-1">Average Score</h6><h3>{{ avg_pct }}%</h3>
+  </div></div></div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <h5>Leaderboard{% if year_filter %} — {{ year_filter }}{% endif %}</h5>
+    <div class="table-responsive">
+    <table class="table table-bordered bg-white">
+      <thead><tr><th>#</th><th>Name</th><th>Register No</th><th>Year</th><th>Score</th><th>%</th><th>Questions Attempted</th></tr></thead>
+      <tbody>
+        {% for row in leaderboard %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ row.student.name }}</td>
+          <td>{{ row.student.register_no }}</td>
+          <td>{{ row.student.year or '—' }}</td>
+          <td>{{ row.score }} / {{ row.max }}</td>
+          <td>{{ row.pct }}%</td>
+          <td>{{ row.count }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="text-muted">No students found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <h5>Per-Question Performance{% if year_filter %} — {{ year_filter }}{% endif %}</h5>
+    <div class="table-responsive">
+    <table class="table table-bordered bg-white">
+      <thead><tr><th>Question</th><th>Attempts</th><th>Avg Score %</th><th>Full Marks</th></tr></thead>
+      <tbody>
+        {% for row in question_stats %}
+        <tr>
+          <td>{{ row.question.title }}</td>
+          <td>{{ row.attempts }}</td>
+          <td>{{ row.avg_pct }}%</td>
+          <td>{{ row.full_marks }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" class="text-muted">No questions yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

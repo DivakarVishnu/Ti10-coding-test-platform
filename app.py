@@ -181,6 +181,29 @@ def logout():
     return redirect(url_for("login"))
 
 
+@app.route("/guest-login", methods=["POST"])
+def guest_login():
+    settings = Settings.get()
+    if not settings.allow_guest_login:
+        flash("Guest login is currently disabled.", "error")
+        return redirect(url_for("login"))
+
+    register_no = request.form.get("register_no", "").strip()
+    student = Student.query.filter_by(register_no=register_no).first()
+    if not student:
+        flash("No account found with that register number.", "error")
+        return redirect(url_for("login"))
+    if student.status != "approved":
+        flash("Your account is not approved yet.", "error")
+        return redirect(url_for("login"))
+
+    session.clear()
+    session["student_id"] = student.id
+    session["student_name"] = student.name
+    flash("Logged in as guest using your register number.", "success")
+    return redirect(url_for("dashboard"))
+
+
 # --------------------------------------------------------------------------
 # Student dashboard / question / run / submit
 # --------------------------------------------------------------------------
@@ -507,6 +530,21 @@ def admin_set_student_year(sid):
     return redirect(url_for("admin_students", status=request.form.get("status_filter", "approved")))
 
 
+@app.route("/admin/students/<int:sid>/reset-password", methods=["POST"])
+@admin_required
+def admin_reset_student_password(sid):
+    s = Student.query.get_or_404(sid)
+    new_password = request.form.get("new_password", "").strip()
+    status_filter = request.form.get("status_filter", "approved")
+    if len(new_password) < 6:
+        flash("Password must be at least 6 characters.", "error")
+        return redirect(url_for("admin_students", status=status_filter))
+    s.set_password(new_password)
+    db.session.commit()
+    flash(f"Password reset for {s.name}. Share the new password with them securely.", "success")
+    return redirect(url_for("admin_students", status=status_filter))
+
+
 @app.route("/admin/students/clear-data", methods=["POST"])
 @admin_required
 def admin_clear_student_data():
@@ -571,6 +609,7 @@ def admin_update_settings():
     settings.start_time = datetime.fromisoformat(start) if start else None
     settings.end_time = datetime.fromisoformat(end) if end else None
     settings.max_tab_switches = int(request.form.get("max_tab_switches", 3))
+    settings.allow_guest_login = bool(request.form.get("allow_guest_login"))
 
     db.session.commit()
     flash("Settings updated.", "success")
@@ -763,6 +802,75 @@ def admin_rerun_submission(sub_id):
         })
     passed = sum(1 for r in out if r["passed"])
     return jsonify({"results": out, "passed_count": passed, "total_count": len(out)})
+
+
+@app.route("/admin/analytics")
+@admin_required
+def admin_analytics():
+    year_filter = request.args.get("year", "").strip()
+
+    students_q = Student.query.filter_by(status="approved")
+    if year_filter:
+        students_q = students_q.filter_by(year=year_filter)
+    students = students_q.all()
+    student_ids = [s.id for s in students]
+
+    subs = Submission.query.filter(Submission.student_id.in_(student_ids)).all() if student_ids else []
+
+    student_totals = {}
+    for s in subs:
+        t = student_totals.setdefault(s.student_id, {"score": 0.0, "max": 0.0, "count": 0})
+        t["score"] += s.score or 0
+        t["max"] += s.max_score or 0
+        t["count"] += 1
+
+    leaderboard = []
+    for st in students:
+        t = student_totals.get(st.id, {"score": 0.0, "max": 0.0, "count": 0})
+        pct = round((t["score"] / t["max"]) * 100, 1) if t["max"] else 0
+        leaderboard.append({
+            "student": st,
+            "score": round(t["score"], 2),
+            "max": round(t["max"], 2),
+            "count": t["count"],
+            "pct": pct,
+        })
+    leaderboard.sort(key=lambda x: x["score"], reverse=True)
+
+    total_students = len(students)
+    attempted_students = len([x for x in leaderboard if x["count"] > 0])
+    avg_pct = round(sum(x["pct"] for x in leaderboard) / total_students, 1) if total_students else 0
+
+    questions = Question.query.order_by(Question.id).all()
+    question_stats = []
+    for q in questions:
+        q_subs = [s for s in subs if s.question_id == q.id]
+        if not q_subs:
+            question_stats.append({"question": q, "attempts": 0, "avg_pct": 0, "full_marks": 0})
+            continue
+        avg_pct_q = round(
+            sum((s.score / s.max_score * 100 if s.max_score else 0) for s in q_subs) / len(q_subs), 1
+        )
+        full_marks = len([s for s in q_subs if s.max_score and s.score == s.max_score])
+        question_stats.append({
+            "question": q,
+            "attempts": len(q_subs),
+            "avg_pct": avg_pct_q,
+            "full_marks": full_marks,
+        })
+
+    years = sorted(set(s.year for s in Student.query.all() if s.year))
+
+    return render_template(
+        "admin_analytics.html",
+        leaderboard=leaderboard,
+        total_students=total_students,
+        attempted_students=attempted_students,
+        avg_pct=avg_pct,
+        question_stats=question_stats,
+        years=years,
+        year_filter=year_filter,
+    )
 
 
 @app.route("/admin/export.csv")

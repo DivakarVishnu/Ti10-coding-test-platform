@@ -511,3 +511,39 @@ pre {
 .bg-waves .wave-2 svg { height: 60px; }
 .bg-waves .wave-1 svg { height: 60px; }
 .auth-wrapper, .navbar, .container { position: relative; z-index: 1; }
+
+
+
+/* ---------------------------------- Site-wide background scene (stars + moon) ---------------------------------- */
+.site-bg-scene {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.site-moon {
+  position: absolute;
+  top: 6%; right: 8%;
+  width: 70px; height: 70px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #f3f0fa, #d8b4fe 60%, transparent 75%);
+  box-shadow: 0 0 50px 14px var(--accent-glow), 0 0 110px 40px rgba(168,85,247,0.18);
+  opacity: 0.55;
+}
+.site-stars { position: absolute; inset: 0; }
+.site-star {
+  position: absolute;
+  width: 2px; height: 2px;
+  background: #fff;
+  border-radius: 50%;
+  animation: siteTwinkle 3.2s ease-in-out infinite;
+  opacity: 0.35;
+}
+@keyframes siteTwinkle {
+  0%, 100% { opacity: 0.1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.5); }
+}
+@media (max-width: 768px) {
+  .site-moon { width: 46px; height: 46px; top: 4%; right: 6%; }
+}
