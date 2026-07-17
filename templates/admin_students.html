@@ -5,7 +5,7 @@
 {% block content %}
 <style>
 /* ==========================================================================
-   Ti10 — design tokens (unchanged from your style.css)
+   Ti10 — design tokens
    ========================================================================== */
 :root {
   --bg: #09090f;
@@ -44,7 +44,6 @@ h1,h2,h3,h4,h5,h6 { font-family: var(--font-display); letter-spacing: -0.01em; m
 code, pre { font-family: var(--font-mono); }
 ::selection { background: var(--accent-soft); }
 
-/* site-wide ambient stars/moon — always non-interactive */
 .site-bg-scene { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
 .site-moon {
   position: absolute; top: 6%; right: 8%; width: 70px; height: 70px; border-radius: 50%;
@@ -58,13 +57,12 @@ code, pre { font-family: var(--font-mono); }
 }
 @keyframes siteTwinkle { 0%,100% { opacity:.1; transform:scale(1);} 50% { opacity:.6; transform:scale(1.5);} }
 
-/* ---------------------------------- Navbar ---------------------------------- */
 .navbar {
   position: sticky; top: 0; z-index: 40;
   display: flex; align-items: center; justify-content: space-between;
   padding: 0.85rem 1.5rem;
   background: rgba(10, 9, 18, 0.75);
-  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--card-border);
 }
 .navbar-brand {
@@ -74,26 +72,13 @@ code, pre { font-family: var(--font-mono); }
 }
 .navbar-tag { color: var(--text-muted); font-size: 0.85rem; }
 
-/* ---------------------------------- Layout ---------------------------------- */
 .container { max-width: 1160px; margin: 0 auto; padding: 2rem 1.25rem 4rem; position: relative; z-index: 1; }
 .page-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .75rem; margin-bottom: 1.5rem; }
 
-/* ---------------------------------- Cards ---------------------------------- */
-.card {
-  background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius);
-  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-  box-shadow: 0 8px 30px rgba(0,0,0,0.35);
-  transition: border-color .2s ease;
-}
-.card:hover { border-color: var(--card-border-hover); }
-.card-body { padding: 1.25rem 1.4rem; }
-
-/* ---------------------------------- Buttons ---------------------------------- */
 .btn {
   border-radius: 10px; font-weight: 600; font-size: .85rem; padding: 0.5rem 1.05rem;
-  border: none; cursor: pointer; transition: all .15s ease; font-family: var(--font-body);
+  border: none; cursor: pointer; transition: all .15s ease;
   display: inline-flex; align-items: center; gap: .4rem; white-space: nowrap;
-  position: relative; overflow: hidden;
 }
 .btn:active { transform: scale(0.96); }
 .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; box-shadow: 0 4px 20px rgba(168,85,247,0.25); }
@@ -109,16 +94,10 @@ code, pre { font-family: var(--font-mono); }
 .btn-outline { background: transparent; border: 1px solid var(--card-border); color: var(--text-muted); }
 .btn-outline:hover { background: rgba(255,255,255,.05); color: var(--text-primary); border-color: var(--card-border-hover); }
 .btn-sm { padding: .38rem .8rem; font-size: .78rem; }
-.btn:disabled { opacity:.5; cursor:not-allowed; transform:none !important; }
 
-/* ripple */
-.btn .ripple { position: absolute; border-radius: 50%; background: rgba(255,255,255,.45); transform: scale(0); animation: rippleAnim .55s ease-out; pointer-events: none; }
-@keyframes rippleAnim { to { transform: scale(3); opacity: 0; } }
-
-/* ---------------------------------- Forms ---------------------------------- */
 .form-control, .form-select {
   width: 100%; background: rgba(255,255,255,.04); border: 1px solid var(--card-border);
-  color: var(--text-primary); border-radius: 10px; padding: .55rem .8rem; font-family: var(--font-body);
+  color: var(--text-primary); border-radius: 10px; padding: .55rem .8rem;
   font-size: .9rem; transition: all .15s ease;
 }
 .form-control:focus, .form-select:focus {
@@ -127,10 +106,7 @@ code, pre { font-family: var(--font-mono); }
 }
 .form-control::placeholder { color: var(--text-faint); }
 .form-label { display:block; color: var(--text-muted); font-weight: 500; font-size: .8rem; margin-bottom: .35rem; }
-.field { margin-bottom: 1rem; }
-.hint { color: var(--text-faint); font-size: .75rem; margin-top: .3rem; display:block; }
 
-/* ---------------------------------- Toolbar ---------------------------------- */
 .toolbar { display:flex; gap:.6rem; flex-wrap:wrap; align-items:center; margin-bottom:1.25rem; }
 .toolbar .form-select { width: auto; min-width: 150px; }
 .toolbar .search-wrap { position: relative; flex: 1; min-width: 220px; }
@@ -138,10 +114,9 @@ code, pre { font-family: var(--font-mono); }
 .toolbar .search-wrap input { padding-left: 2.1rem; }
 .result-count { color: var(--text-muted); font-size: .85rem; }
 
-/* ---------------------------------- Table ---------------------------------- */
 .table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--card-border); background: var(--card-bg-solid); }
 table { width: 100%; border-collapse: collapse; }
-thead { color: var(--text-muted); font-family: var(--font-display); font-size: .74rem; text-transform: uppercase; letter-spacing: .05em; }
+thead { color: var(--text-muted); font-size: .74rem; text-transform: uppercase; letter-spacing: .05em; }
 th, td { padding: .85rem 1rem; text-align: left; border-bottom: 1px solid var(--card-border); vertical-align: middle; }
 tbody tr { transition: background .15s ease; }
 tbody tr:hover { background: rgba(168,85,247,0.05); }
@@ -149,64 +124,29 @@ tbody tr:last-child td { border-bottom: none; }
 .mono { font-family: var(--font-mono); font-size: .82rem; color: #d8d3e8; }
 .muted-cell { color: var(--text-muted); font-size: .82rem; }
 
-/* badges */
-.badge { font-weight: 600; padding: .32em .7em; border-radius: 8px; font-size: .74rem; letter-spacing: .01em; display: inline-flex; align-items:center; gap:.3em; }
+.badge { font-weight: 600; padding: .32em .7em; border-radius: 8px; font-size: .74rem; display: inline-flex; align-items:center; gap:.3em; }
 .badge.b-success { background: rgba(52,211,153,.18); color: var(--success); border:1px solid rgba(52,211,153,.3); }
 .badge.b-warning { background: rgba(251,191,36,.18); color: var(--warning); border:1px solid rgba(251,191,36,.3); }
 .badge.b-danger { background: rgba(248,113,113,.18); color: var(--danger); border:1px solid rgba(248,113,113,.3); }
 .badge.b-secondary { background: rgba(255,255,255,.08); color: var(--text-muted); }
 .dot { width:6px; height:6px; border-radius:50%; background: currentColor; box-shadow: 0 0 6px currentColor; }
-
 .actions { display:flex; gap:.4rem; flex-wrap:wrap; }
 
-/* ---------------------------------- Modal ---------------------------------- */
+/* Modal styles using Bootstrap classes */
+.modal-content {
+  background: var(--card-bg-solid);
+  border: 1px solid var(--card-border-hover);
+}
+.modal-header {
+  border-bottom: 1px solid var(--card-border);
+}
+.modal-footer {
+  border-top: 1px solid var(--card-border);
+}
 .modal-backdrop {
-  position: fixed; inset: 0; z-index: 100;
-  background: rgba(5,4,10,0.6); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
-  display: flex; align-items: center; justify-content: center; padding: 1rem;
-  opacity: 0; pointer-events: none; transition: opacity .2s ease;
+  background: rgba(5,4,10,0.6);
+  backdrop-filter: blur(4px);
 }
-.modal-backdrop.open { opacity: 1; pointer-events: auto; }
-.modal-box {
-  width: 100%; max-width: 440px;
-  background: var(--card-bg-solid); border: 1px solid var(--card-border-hover); border-radius: var(--radius);
-  box-shadow: 0 20px 60px rgba(0,0,0,.55), 0 0 0 1px rgba(168,85,247,.08);
-  transform: scale(0.92) translateY(14px); opacity: 0; transition: transform .25s cubic-bezier(.2,.8,.2,1), opacity .2s ease;
-}
-.modal-backdrop.open .modal-box { transform: scale(1) translateY(0); opacity: 1; }
-.modal-head { display:flex; justify-content:space-between; align-items:center; padding: 1.1rem 1.3rem; border-bottom: 1px solid var(--card-border); }
-.modal-head h5 { font-size: 1.05rem; }
-.modal-head .sub { color: var(--text-muted); font-size: .8rem; margin-top: .15rem; }
-.modal-close { background: transparent; border: none; color: var(--text-muted); font-size: 1.3rem; cursor: pointer; line-height: 1; padding: .2rem; border-radius: 6px; transition: all .15s ease; }
-.modal-close:hover { color: var(--text-primary); background: rgba(255,255,255,.06); }
-.modal-body { padding: 1.3rem; }
-.modal-foot { padding: 1rem 1.3rem; border-top: 1px solid var(--card-border); display:flex; justify-content:flex-end; gap:.6rem; }
-
-/* ---------------------------------- Toasts ---------------------------------- */
-.toast-stack { position: fixed; top: 1rem; right: 1rem; z-index: 200; display:flex; flex-direction:column; gap:.6rem; }
-.toast {
-  min-width: 260px; max-width: 340px; padding: .8rem 1rem; border-radius: 12px;
-  background: var(--card-bg-solid); border: 1px solid var(--card-border-hover);
-  box-shadow: 0 10px 30px rgba(0,0,0,.4);
-  display:flex; align-items:flex-start; gap:.6rem; font-size: .86rem;
-  transform: translateX(120%); animation: toastIn .35s cubic-bezier(.2,.8,.2,1) forwards, toastOut .35s ease forwards 3.2s;
-}
-.toast i { margin-top: .1rem; }
-.toast.ok { border-color: rgba(52,211,153,.4); }
-.toast.ok i { color: var(--success); }
-.toast.err { border-color: rgba(248,113,113,.4); }
-.toast.err i { color: var(--danger); }
-@keyframes toastIn { to { transform: translateX(0); } }
-@keyframes toastOut { to { transform: translateX(120%); opacity:0; } }
-
-/* pending pulse ring on avatar-less rows */
-.new-pill { position: relative; }
-.new-pill::after {
-  content:''; position:absolute; inset:-3px; border-radius:8px; border:1px solid var(--warning);
-  animation: pendingPulse 1.8s ease-out infinite;
-}
-@keyframes pendingPulse { 0% { opacity:.6; transform:scale(1);} 100% { opacity:0; transform:scale(1.35);} }
-
 .empty-state { text-align:center; padding: 3rem 1rem; color: var(--text-muted); }
 .empty-state i { font-size: 2.2rem; display:block; margin-bottom:.6rem; color: var(--text-faint); }
 
@@ -216,17 +156,7 @@ tbody tr:last-child td { border-bottom: none; }
 }
 </style>
 
-<!-- Pass real data from Flask to JavaScript -->
-<script>
-// REAL DATA from your database
-const students = {{ students|tojson|safe }};
-const pendingCount = {{ pending_count }};
-const currentStatusFilter = "{{ status_filter }}";
-const currentSearchQuery = "{{ search_query or '' }}";
-</script>
-
 <div class="site-bg-scene"><div class="site-moon"></div><div class="site-stars" id="siteStars"></div></div>
-<div class="toast-stack" id="toastStack"></div>
 
 <nav class="navbar">
   <span class="navbar-brand">Ti10 Admin</span>
@@ -237,24 +167,32 @@ const currentSearchQuery = "{{ search_query or '' }}";
 
   <div class="page-head">
     <h2>Students</h2>
-    <span class="badge b-warning"><span class="dot"></span> Pending: <span id="pendingCount">0</span></span>
+    <span class="badge b-warning"><span class="dot"></span> Pending: {{ pending_count }}</span>
   </div>
 
+  <!-- Filter and Search -->
   <div class="toolbar">
-    <select id="statusFilter" class="form-select">
-      <option value="all">All statuses</option>
-      <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
-      <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Approved</option>
-      <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
-      <option value="deactivated" {% if status_filter == 'deactivated' %}selected{% endif %}>Deactivated</option>
-    </select>
-    <div class="search-wrap">
-      <i class="bi bi-search"></i>
-      <input id="searchBox" class="form-control" placeholder="Search by name, email, or register no…" value="{{ search_query or '' }}">
-    </div>
-    <span class="result-count" id="resultCount"></span>
+    <form method="GET" action="{{ url_for('admin_students') }}" class="d-flex flex-wrap gap-2 w-100">
+      <select name="status" class="form-select" style="width: auto; min-width: 150px;" onchange="this.form.submit()">
+        <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+        <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Approved</option>
+        <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+        <option value="deactivated" {% if status_filter == 'deactivated' %}selected{% endif %}>Deactivated</option>
+      </select>
+      <div class="search-wrap" style="flex: 1; min-width: 200px;">
+        <i class="bi bi-search"></i>
+        <input type="text" name="search" class="form-control" placeholder="Search by name, email, or register no..." value="{{ search_query or '' }}">
+      </div>
+      <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Search</button>
+      {% if search_query %}
+      <a href="{{ url_for('admin_students', status=status_filter) }}" class="btn btn-outline"><i class="bi bi-x-circle"></i> Clear</a>
+      {% endif %}
+      <span class="result-count ms-auto">{{ students|length }} student(s) found</span>
+    </form>
   </div>
 
+  <!-- Table -->
+  {% if students %}
   <div class="table-wrap">
     <table>
       <thead>
@@ -262,303 +200,139 @@ const currentSearchQuery = "{{ search_query or '' }}";
           <th>#</th><th>Name</th><th>Email</th><th>Register No</th><th>Year</th><th>Status</th><th>Joined</th><th style="min-width:220px;">Actions</th>
         </tr>
       </thead>
-      <tbody id="tableBody"></tbody>
+      <tbody>
+        {% for student in students %}
+        <tr>
+          <td class="muted-cell">{{ student.id }}</td>
+          <td><strong>{{ student.name }}</strong></td>
+          <td class="muted-cell">{{ student.email }}</td>
+          <td class="mono">{{ student.register_no }}</td>
+          <td class="muted-cell">{{ student.year or 'Not set' }}</td>
+          <td>
+            <span class="badge {% if student.status == 'approved' %}b-success{% elif student.status == 'pending' %}b-warning{% elif student.status == 'rejected' %}b-danger{% else %}b-secondary{% endif %}">
+              <i class="bi bi-{% if student.status == 'approved' %}check-circle{% elif student.status == 'pending' %}hourglass-split{% elif student.status == 'rejected' %}x-circle{% else %}slash-circle{% endif %}"></i>
+              {{ student.status }}
+            </span>
+          </td>
+          <td class="muted-cell">{{ student.created_at|ist }}</td>
+          <td>
+            <div class="actions">
+              {% if student.status == 'pending' %}
+              <form method="POST" action="{{ url_for('admin_approve_student', sid=student.id) }}" class="d-inline">
+                <input type="hidden" name="status_filter" value="{{ status_filter }}">
+                <button type="submit" class="btn btn-success btn-sm"><i class="bi bi-check-lg"></i> Approve</button>
+              </form>
+              <form method="POST" action="{{ url_for('admin_reject_student', sid=student.id) }}" class="d-inline">
+                <input type="hidden" name="status_filter" value="{{ status_filter }}">
+                <button type="submit" class="btn btn-danger btn-sm"><i class="bi bi-x-lg"></i> Reject</button>
+              </form>
+              {% elif student.status == 'approved' %}
+              <form method="POST" action="{{ url_for('admin_deactivate_student', sid=student.id) }}" class="d-inline">
+                <input type="hidden" name="status_filter" value="{{ status_filter }}">
+                <button type="submit" class="btn btn-warning btn-sm"><i class="bi bi-pause-circle"></i> Deactivate</button>
+              </form>
+              {% elif student.status == 'deactivated' %}
+              <form method="POST" action="{{ url_for('admin_reactivate_student', sid=student.id) }}" class="d-inline">
+                <input type="hidden" name="status_filter" value="{{ status_filter }}">
+                <button type="submit" class="btn btn-success btn-sm"><i class="bi bi-play-circle"></i> Reactivate</button>
+              </form>
+              {% endif %}
+              
+              <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#editModal{{ student.id }}">
+                <i class="bi bi-pencil"></i> Edit
+              </button>
+              <button type="button" class="btn btn-outline btn-sm" data-bs-toggle="modal" data-bs-target="#resetModal{{ student.id }}">
+                <i class="bi bi-key"></i> Reset PW
+              </button>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
     </table>
   </div>
-  <div class="empty-state" id="emptyState" style="display:none;">
+  {% else %}
+  <div class="empty-state">
     <i class="bi bi-person-x"></i>
     No students found matching your criteria.
   </div>
+  {% endif %}
 
 </div>
 
-<!-- Edit modal -->
-<div class="modal-backdrop" id="editBackdrop">
-  <div class="modal-box">
-    <div class="modal-head">
-      <div>
-        <h5>Edit student</h5>
-        <div class="sub" id="editSub"></div>
+<!-- Edit Modals -->
+{% for student in students %}
+<div class="modal fade" id="editModal{{ student.id }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-pencil-square text-primary"></i> Edit Student: {{ student.name }}</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
-      <button class="modal-close" data-close>&times;</button>
-    </div>
-    <div class="modal-body">
-      <div class="field">
-        <label class="form-label">Register number</label>
-        <input class="form-control" id="editRegNo" required>
-      </div>
-      <div class="field">
-        <label class="form-label">Name</label>
-        <input class="form-control" id="editName" required>
-      </div>
-      <div class="field" style="margin-bottom:0;">
-        <label class="form-label">Email</label>
-        <input class="form-control" id="editEmail" type="email" required>
-      </div>
-    </div>
-    <div class="modal-foot">
-      <button class="btn btn-outline" data-close>Cancel</button>
-      <button class="btn btn-primary" id="saveEditBtn"><i class="bi bi-check2"></i> Save changes</button>
+      <form method="POST" action="{{ url_for('admin_edit_student', sid=student.id) }}">
+        <div class="modal-body">
+          <input type="hidden" name="status_filter" value="{{ status_filter }}">
+          <div class="mb-3">
+            <label class="form-label"><i class="bi bi-hash"></i> Register Number</label>
+            <input type="text" name="register_no" class="form-control" value="{{ student.register_no }}" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label"><i class="bi bi-person"></i> Name</label>
+            <input type="text" name="name" class="form-control" value="{{ student.name }}" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label"><i class="bi bi-envelope"></i> Email</label>
+            <input type="email" name="email" class="form-control" value="{{ student.email }}" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" data-bs-dismiss="modal"><i class="bi bi-x-circle"></i> Cancel</button>
+          <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle"></i> Save Changes</button>
+        </div>
+      </form>
     </div>
   </div>
 </div>
 
-<!-- Reset password modal -->
-<div class="modal-backdrop" id="resetBackdrop">
-  <div class="modal-box">
-    <div class="modal-head">
-      <div>
-        <h5>Reset password</h5>
-        <div class="sub" id="resetSub"></div>
+<!-- Reset Password Modals -->
+<div class="modal fade" id="resetModal{{ student.id }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-key text-warning"></i> Reset Password for {{ student.name }}</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
-      <button class="modal-close" data-close>&times;</button>
-    </div>
-    <div class="modal-body">
-      <div class="field" style="margin-bottom:.3rem;">
-        <label class="form-label">New password (min 6 characters)</label>
-        <input class="form-control" id="resetPw" type="text" minlength="6">
-      </div>
-      <span class="hint">Share this password securely with the student.</span>
-    </div>
-    <div class="modal-foot">
-      <button class="btn btn-outline" data-close>Cancel</button>
-      <button class="btn btn-warning" id="saveResetBtn"><i class="bi bi-key"></i> Reset password</button>
+      <form method="POST" action="{{ url_for('admin_reset_student_password', sid=student.id) }}">
+        <div class="modal-body">
+          <input type="hidden" name="status_filter" value="{{ status_filter }}">
+          <div class="mb-3">
+            <label class="form-label"><i class="bi bi-lock"></i> New Password (min 6 characters)</label>
+            <input type="text" name="new_password" class="form-control" required minlength="6">
+            <small class="text-muted"><i class="bi bi-info-circle"></i> Share this password securely with the student.</small>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" data-bs-dismiss="modal"><i class="bi bi-x-circle"></i> Cancel</button>
+          <button type="submit" class="btn btn-warning"><i class="bi bi-key-fill"></i> Reset Password</button>
+        </div>
+      </form>
     </div>
   </div>
 </div>
+{% endfor %}
 
 <script>
-// ---------------------------------------------------------------------------
-// Use REAL DATA from Flask - no more mock data!
-// ---------------------------------------------------------------------------
-
-const tableBody = document.getElementById('tableBody');
-const emptyState = document.getElementById('emptyState');
-const resultCount = document.getElementById('resultCount');
-const pendingCountEl = document.getElementById('pendingCount');
-const statusFilter = document.getElementById('statusFilter');
-const searchBox = document.getElementById('searchBox');
-
-function statusBadge(status) {
-  const map = {
-    approved: ['b-success', 'check-circle'],
-    pending: ['b-warning', 'hourglass-split'],
-    rejected: ['b-danger', 'x-circle'],
-    deactivated: ['b-secondary', 'slash-circle'],
-  };
-  const [cls, icon] = map[status] || ['b-secondary', 'question'];
-  return `<span class="badge ${cls}"><i class="bi bi-${icon}"></i>${status}</span>`;
-}
-
-function actionButtons(s) {
-  let html = '<div class="actions">';
-  if (s.status === 'pending') {
-    html += `<button class="btn btn-success btn-sm" onclick="approve(${s.id})"><i class="bi bi-check-lg"></i>Approve</button>`;
-    html += `<button class="btn btn-danger btn-sm" onclick="reject(${s.id})"><i class="bi bi-x-lg"></i>Reject</button>`;
-  } else if (s.status === 'approved') {
-    html += `<button class="btn btn-warning btn-sm" onclick="deactivate(${s.id})"><i class="bi bi-pause-circle"></i>Deactivate</button>`;
-  } else if (s.status === 'deactivated') {
-    html += `<button class="btn btn-success btn-sm" onclick="reactivate(${s.id})"><i class="bi bi-play-circle"></i>Reactivate</button>`;
-  }
-  html += `<button class="btn btn-info btn-sm" onclick="openEdit(${s.id})"><i class="bi bi-pencil"></i>Edit</button>`;
-  html += `<button class="btn btn-outline btn-sm" onclick="openReset(${s.id})"><i class="bi bi-key"></i>Reset PW</button>`;
-  html += '</div>';
-  return html;
-}
-
-function render() {
-  const status = statusFilter.value;
-  const q = searchBox.value.trim().toLowerCase();
-  let rows = students.filter(s => status === 'all' || s.status === status);
-  if (q) {
-    rows = rows.filter(s =>
-      s.name.toLowerCase().includes(q) ||
-      s.email.toLowerCase().includes(q) ||
-      s.register_no.toLowerCase().includes(q)
-    );
-  }
-  pendingCountEl.textContent = students.filter(s => s.status === 'pending').length;
-  resultCount.textContent = `${rows.length} student(s) found`;
-
-  if (!rows.length) {
-    tableBody.innerHTML = '';
-    emptyState.style.display = 'block';
-    return;
-  }
-  emptyState.style.display = 'none';
-
-  tableBody.innerHTML = rows.map(s => `
-    <tr>
-      <td class="muted-cell">${s.id}</td>
-      <td><strong>${s.name}</strong></td>
-      <td class="muted-cell">${s.email}</td>
-      <td class="mono">${s.register_no}</td>
-      <td class="muted-cell">${s.year || 'Not set'}</td>
-      <td>${statusBadge(s.status)}</td>
-      <td class="muted-cell">${s.created_at || ''}</td>
-      <td>${actionButtons(s)}</td>
-    </tr>
-  `).join('');
-}
-
-statusFilter.addEventListener('change', render);
-searchBox.addEventListener('input', render);
-
-// ---------------------------------------------------------------------------
-// Actions - These send POST requests to Flask
-// ---------------------------------------------------------------------------
-function find(id) { return students.find(s => s.id === id); }
-
-function approve(id) {
-  // Send POST to Flask
-  fetch(`/admin/students/${id}/approve`, { method: 'POST' })
-    .then(() => {
-      find(id).status = 'approved';
-      toast('ok', `${find(id).name} approved.`);
-      render();
-    })
-    .catch(() => toast('err', 'Error approving student.'));
-}
-
-function reject(id) {
-  fetch(`/admin/students/${id}/reject`, { method: 'POST' })
-    .then(() => {
-      find(id).status = 'rejected';
-      toast('ok', `${find(id).name} rejected.`);
-      render();
-    })
-    .catch(() => toast('err', 'Error rejecting student.'));
-}
-
-function deactivate(id) {
-  fetch(`/admin/students/${id}/deactivate`, { method: 'POST' })
-    .then(() => {
-      find(id).status = 'deactivated';
-      toast('ok', `${find(id).name}'s account has been deactivated.`);
-      render();
-    })
-    .catch(() => toast('err', 'Error deactivating student.'));
-}
-
-function reactivate(id) {
-  fetch(`/admin/students/${id}/reactivate`, { method: 'POST' })
-    .then(() => {
-      find(id).status = 'approved';
-      toast('ok', `${find(id).name}'s account has been reactivated.`);
-      render();
-    })
-    .catch(() => toast('err', 'Error reactivating student.'));
-}
-
-// ---- Edit modal ----
-let editingId = null;
-const editBackdrop = document.getElementById('editBackdrop');
-function openEdit(id) {
-  const s = find(id);
-  editingId = id;
-  document.getElementById('editSub').textContent = `${s.name} · ${s.register_no}`;
-  document.getElementById('editRegNo').value = s.register_no;
-  document.getElementById('editName').value = s.name;
-  document.getElementById('editEmail').value = s.email;
-  openModal(editBackdrop);
-}
-document.getElementById('saveEditBtn').addEventListener('click', function () {
-  const regNo = document.getElementById('editRegNo').value.trim();
-  const name = document.getElementById('editName').value.trim();
-  const email = document.getElementById('editEmail').value.trim().toLowerCase();
-  if (!regNo || !name || !email) { toast('err', "Name, email and register number can't be empty."); return; }
-  
-  const s = find(editingId);
-  // Send to Flask
-  fetch(`/admin/students/${editingId}/edit`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ register_no: regNo, name: name, email: email, status_filter: currentStatusFilter })
-  })
-  .then(() => {
-    s.register_no = regNo; s.name = name; s.email = email;
-    toast('ok', `Updated details for ${s.name}.`);
-    closeModal(editBackdrop);
-    render();
-  })
-  .catch(() => toast('err', 'Error updating student.'));
-});
-
-// ---- Reset password modal ----
-let resettingId = null;
-const resetBackdrop = document.getElementById('resetBackdrop');
-function openReset(id) {
-  resettingId = id;
-  document.getElementById('resetSub').textContent = find(id).name;
-  document.getElementById('resetPw').value = '';
-  openModal(resetBackdrop);
-}
-document.getElementById('saveResetBtn').addEventListener('click', function () {
-  const pw = document.getElementById('resetPw').value.trim();
-  if (pw.length < 6) { toast('err', 'Password must be at least 6 characters.'); return; }
-  
-  fetch(`/admin/students/${resettingId}/reset-password`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ new_password: pw, status_filter: currentStatusFilter })
-  })
-  .then(() => {
-    toast('ok', `Password reset for ${find(resettingId).name}.`);
-    closeModal(resetBackdrop);
-  })
-  .catch(() => toast('err', 'Error resetting password.'));
-});
-
-// ---- Generic modal open/close ----
-function openModal(el) { el.classList.add('open'); document.body.style.overflow = 'hidden'; }
-function closeModal(el) { el.classList.remove('open'); document.body.style.overflow = ''; }
-document.querySelectorAll('[data-close]').forEach(btn => {
-  btn.addEventListener('click', () => btn.closest('.modal-backdrop').classList.remove('open'));
-});
-document.querySelectorAll('.modal-backdrop').forEach(bd => {
-  bd.addEventListener('click', e => { if (e.target === bd) closeModal(bd); });
-});
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') document.querySelectorAll('.modal-backdrop.open').forEach(closeModal);
-});
-
-// ---- Button ripple ----
-document.addEventListener('click', function (e) {
-  const btn = e.target.closest('.btn');
-  if (!btn) return;
-  const rect = btn.getBoundingClientRect();
-  const ripple = document.createElement('span');
-  const size = Math.max(rect.width, rect.height);
-  ripple.className = 'ripple';
-  ripple.style.width = ripple.style.height = size + 'px';
-  ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
-  ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
-  btn.appendChild(ripple);
-  setTimeout(() => ripple.remove(), 600);
-});
-
-// ---- Toasts ----
-function toast(kind, msg) {
-  const stack = document.getElementById('toastStack');
-  const el = document.createElement('div');
-  el.className = 'toast ' + (kind === 'ok' ? 'ok' : 'err');
-  el.innerHTML = `<i class="bi bi-${kind === 'ok' ? 'check-circle' : 'exclamation-circle'}"></i><span>${msg}</span>`;
-  stack.appendChild(el);
-  setTimeout(() => el.remove(), 3600);
-}
-
-// ---- ambient stars ----
+// ambient stars
 const starsWrap = document.getElementById('siteStars');
-for (let i = 0; i < 40; i++) {
-  const star = document.createElement('div');
-  star.className = 'site-star';
-  star.style.left = Math.random() * 100 + '%';
-  star.style.top = Math.random() * 100 + '%';
-  star.style.animationDelay = (Math.random() * 3.2) + 's';
-  starsWrap.appendChild(star);
+if (starsWrap) {
+  for (let i = 0; i < 40; i++) {
+    const star = document.createElement('div');
+    star.className = 'site-star';
+    star.style.left = Math.random() * 100 + '%';
+    star.style.top = Math.random() * 100 + '%';
+    star.style.animationDelay = (Math.random() * 3.2) + 's';
+    starsWrap.appendChild(star);
+  }
 }
-
-// Initial render
-render();
 </script>
 {% endblock %}
