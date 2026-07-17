@@ -166,6 +166,10 @@ def login():
         if student.status == "rejected":
             flash("Your registration was not approved. Contact your administrator.", "error")
             return redirect(url_for("login"))
+        
+        if student.status == "deactivated":
+            flash("Your account has been deactivated. Contact your administrator.", "error")
+            return redirect(url_for("login"))
 
         session.clear()
         session["student_id"] = student.id
@@ -482,18 +486,36 @@ def admin_logout():
 @admin_required
 def admin_students():
     status_filter = request.args.get("status", "pending")
+    search_query = request.args.get("search", "").strip()
+    
     query = Student.query
-    if status_filter in ("pending", "approved", "rejected"):
+    
+    # Apply status filter
+    if status_filter in ("pending", "approved", "rejected", "deactivated"):
         query = query.filter_by(status=status_filter)
+    
+    # Apply search filter (register_no, name, or email)
+    if search_query:
+        search_pattern = f"%{search_query}%"
+        query = query.filter(
+            db.or_(
+                Student.register_no.ilike(search_pattern),
+                Student.name.ilike(search_pattern),
+                Student.email.ilike(search_pattern)
+            )
+        )
+    
     students = query.order_by(Student.created_at.desc()).all()
     pending_count = Student.query.filter_by(status="pending").count()
     years = sorted(set(s.year for s in Student.query.all() if s.year))
+    
     return render_template(
         "admin_students.html",
         students=students,
         status_filter=status_filter,
         pending_count=pending_count,
         years=years,
+        search_query=search_query,
     )
 
 
@@ -527,6 +549,55 @@ def admin_set_student_year(sid):
     s.year = request.form.get("year", "").strip() or None
     db.session.commit()
     flash(f"Year updated for {s.name}.", "success")
+    return redirect(url_for("admin_students", status=request.form.get("status_filter", "approved")))
+
+
+@app.route("/admin/students/<int:sid>/edit", methods=["POST"])
+@admin_required
+def admin_edit_student(sid):
+    s = Student.query.get_or_404(sid)
+    new_regno = request.form.get("register_no", "").strip()
+    new_name = request.form.get("name", "").strip()
+    new_email = request.form.get("email", "").strip().lower()
+
+    if not new_regno or not new_name or not new_email:
+        flash("Name, email and register number can't be empty.", "error")
+        return redirect(url_for("admin_students", status=request.form.get("status_filter", "approved")))
+
+    dupe = Student.query.filter(Student.register_no == new_regno, Student.id != sid).first()
+    if dupe:
+        flash("That register number is already used by another student.", "error")
+        return redirect(url_for("admin_students", status=request.form.get("status_filter", "approved")))
+    dupe_email = Student.query.filter(Student.email == new_email, Student.id != sid).first()
+    if dupe_email:
+        flash("That email is already used by another student.", "error")
+        return redirect(url_for("admin_students", status=request.form.get("status_filter", "approved")))
+
+    s.register_no = new_regno
+    s.name = new_name
+    s.email = new_email
+    db.session.commit()
+    flash(f"Updated details for {s.name}.", "success")
+    return redirect(url_for("admin_students", status=request.form.get("status_filter", "approved")))
+
+
+@app.route("/admin/students/<int:sid>/deactivate", methods=["POST"])
+@admin_required
+def admin_deactivate_student(sid):
+    s = Student.query.get_or_404(sid)
+    s.status = "deactivated"
+    db.session.commit()
+    flash(f"{s.name}'s account has been deactivated. They can no longer log in.", "success")
+    return redirect(url_for("admin_students", status=request.form.get("status_filter", "approved")))
+
+
+@app.route("/admin/students/<int:sid>/reactivate", methods=["POST"])
+@admin_required
+def admin_reactivate_student(sid):
+    s = Student.query.get_or_404(sid)
+    s.status = "approved"
+    db.session.commit()
+    flash(f"{s.name}'s account has been reactivated.", "success")
     return redirect(url_for("admin_students", status=request.form.get("status_filter", "approved")))
 
 
