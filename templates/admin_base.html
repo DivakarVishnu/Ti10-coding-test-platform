@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ti10 Admin - {% block title %}{% endblock %}</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <div class="site-bg-scene">
+    <div class="site-moon"></div>
+    <div class="site-stars" id="site-stars"></div>
+  </div>
+
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom border-primary px-3 sticky-top">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="{{ url_for('admin_dashboard') }}">
+        <i class="bi bi-shield-lock-fill text-primary"></i> Ti10 Admin
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNavbar">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="adminNavbar">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'admin_dashboard' %}active{% endif %}" 
+               href="{{ url_for('admin_dashboard') }}">
+              <i class="bi bi-house"></i> Dashboard
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'admin_students' %}active{% endif %}" 
+               href="{{ url_for('admin_students') }}">
+              <i class="bi bi-people"></i> Students
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'admin_submissions' %}active{% endif %}" 
+               href="{{ url_for('admin_submissions') }}">
+              <i class="bi bi-file-code"></i> Submissions
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'admin_analytics' %}active{% endif %}" 
+               href="{{ url_for('admin_analytics') }}">
+              <i class="bi bi-graph-up"></i> Analytics
+            </a>
+          </li>
+        </ul>
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <span class="navbar-text me-3 text-light-emphasis">
+              <i class="bi bi-person-circle"></i> {{ session.get('admin_username', 'Admin') }}
+            </span>
+          </li>
+          <li class="nav-item">
+            <a class="btn btn-outline-danger btn-sm" href="{{ url_for('admin_logout') }}">
+              <i class="bi bi-box-arrow-right"></i> Logout
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container my-4">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const siteStars = document.getElementById('site-stars');
+    if (siteStars) {
+      for (let i = 0; i < 40; i++) {
+        const star = document.createElement('div');
+        star.className = 'site-star';
+        star.style.left = Math.random() * 100 + '%';
+        star.style.top = Math.random() * 100 + '%';
+        star.style.animationDelay = (Math.random() * 3.2) + 's';
+        siteStars.appendChild(star);
+      }
+    }
+  </script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
