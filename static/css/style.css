@@ -547,3 +547,62 @@ pre {
 @media (max-width: 768px) {
   .site-moon { width: 46px; height: 46px; top: 4%; right: 6%; }
 }
+
+/* ---------------------------------- Custom student edit/reset modal ---------------------------------- */
+.ti10-modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 99998;
+  background: rgba(5, 4, 10, 0.75);
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.ti10-modal-overlay.active {
+  display: flex;
+}
+.ti10-modal-box {
+  position: relative;
+  z-index: 99999;
+  background: var(--card-bg-solid);
+  border: 1px solid var(--card-border-hover);
+  border-radius: var(--radius);
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+}
+.ti10-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--card-border);
+}
+.ti10-modal-header h5 { margin: 0; font-size: 1.1rem; }
+.ti10-modal-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 0.3rem;
+}
+.ti10-modal-close:hover { color: var(--text-primary); }
+.ti10-modal-body { padding: 1.25rem; }
+.ti10-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--card-border);
+}
+.ti10-modal-box .form-control {
+  position: relative;
+  z-index: 1;
+  pointer-events: auto;
+  caret-color: #ffffff;
+}

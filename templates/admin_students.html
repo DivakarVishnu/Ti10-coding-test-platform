@@ -3,58 +3,59 @@
 {% block content %}
 
 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-  <h4 class="mb-0">Students</h4>
-  <div class="d-flex align-items-center gap-2">
-    <span class="badge bg-warning">Pending: {{ pending_count }}</span>
-    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary btn-sm">&larr; Dashboard</a>
-  </div>
+  <h4 class="mb-0">Students <span class="badge bg-warning text-dark ms-1">{{ pending_count }} pending</span></h4>
+  <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary btn-sm">&larr; Dashboard</a>
 </div>
 
-<form method="GET" action="{{ url_for('admin_students') }}" class="d-flex flex-wrap gap-2 mb-3">
-  <select name="status" class="form-select w-auto" onchange="this.form.submit()">
+<!-- Filter and Search -->
+<form method="GET" action="{{ url_for('admin_students') }}" class="d-flex flex-wrap gap-2 mb-3 align-items-center">
+  <select name="status" class="form-select" style="width: auto; min-width: 150px;" onchange="this.form.submit()">
     <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
     <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Approved</option>
     <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
     <option value="deactivated" {% if status_filter == 'deactivated' %}selected{% endif %}>Deactivated</option>
   </select>
-  <input type="text" name="search" class="form-control" style="max-width:260px;"
-         placeholder="Search name, email, register no..." value="{{ search_query or '' }}">
-  <button type="submit" class="btn btn-primary btn-sm">Search</button>
+  <input type="text" name="search" class="form-control" style="flex: 1; min-width: 220px;"
+         placeholder="Search by name, email, or register no..." value="{{ search_query or '' }}">
+  <button type="submit" class="btn btn-primary">Search</button>
   {% if search_query %}
-    <a href="{{ url_for('admin_students', status=status_filter) }}" class="btn btn-outline-secondary btn-sm">Clear</a>
+    <a href="{{ url_for('admin_students', status=status_filter) }}" class="btn btn-outline-secondary">Clear</a>
   {% endif %}
-  <span class="text-muted small align-self-center ms-auto">{{ students|length }} student(s) found</span>
+  <span class="text-muted small ms-auto">{{ students|length }} student(s) found</span>
 </form>
 
+<!-- Table -->
+{% if students %}
 <div class="table-responsive">
-<table class="table table-bordered bg-white">
+<table class="table table-bordered bg-white align-middle">
   <thead>
     <tr>
-      <th>Name</th><th>Email</th><th>Register No</th><th>Year</th><th>Status</th><th>Joined</th><th style="min-width:260px;">Actions</th>
+      <th>#</th><th>Name</th><th>Email</th><th>Register No</th><th>Year</th><th>Status</th><th>Joined</th>
+      <th style="min-width:230px;">Actions</th>
     </tr>
   </thead>
   <tbody>
     {% for student in students %}
     <tr>
+      <td class="text-muted">{{ student.id }}</td>
       <td><strong>{{ student.name }}</strong></td>
-      <td class="text-muted small">{{ student.email }}</td>
+      <td class="text-muted">{{ student.email }}</td>
       <td class="font-mono">{{ student.register_no }}</td>
-      <td class="text-muted small">{{ student.year or '—' }}</td>
+      <td class="text-muted">{{ student.year or 'Not set' }}</td>
       <td>
         <span class="badge {% if student.status == 'approved' %}bg-success{% elif student.status == 'pending' %}bg-warning{% elif student.status == 'rejected' %}bg-danger{% else %}bg-secondary{% endif %}">
           {{ student.status }}
         </span>
       </td>
-      <td class="text-muted small">{{ student.created_at | ist }}</td>
+      <td class="text-muted">{{ student.created_at|ist }}</td>
       <td>
         <div class="d-flex flex-wrap gap-1">
           {% if student.status == 'pending' %}
-            <form method="POST" action="{{ url_for('admin_approve_student', sid=student.id) }}" class="d-inline">
-              <input type="hidden" name="status_filter" value="{{ status_filter }}">
+            <form method="POST" action="{{ url_for('admin_approve_student', sid=student.id) }}" class="d-inline-flex align-items-center gap-1">
+              <input type="text" name="year" class="form-control form-control-sm" style="width:80px;" placeholder="Year">
               <button type="submit" class="btn btn-sm btn-success">Approve</button>
             </form>
             <form method="POST" action="{{ url_for('admin_reject_student', sid=student.id) }}" class="d-inline">
-              <input type="hidden" name="status_filter" value="{{ status_filter }}">
               <button type="submit" class="btn btn-sm btn-outline-danger">Reject</button>
             </form>
           {% elif student.status == 'approved' %}
@@ -69,21 +70,79 @@
             </form>
           {% endif %}
 
-          <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editModal{{ student.id }}">
+          <button type="button" class="btn btn-sm btn-outline-primary" onclick="ti10OpenModal('editModal{{ student.id }}')">
             Edit
           </button>
-          <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#resetModal{{ student.id }}">
+          <button type="button" class="btn btn-sm btn-outline-secondary" onclick="ti10OpenModal('resetModal{{ student.id }}')">
             Reset PW
           </button>
         </div>
       </td>
     </tr>
-    {% else %}
-    <tr><td colspan="7" class="text-muted">No students found matching your criteria.</td></tr>
     {% endfor %}
   </tbody>
 </table>
 </div>
+{% else %}
+<div class="text-center text-muted py-5">No students found matching your criteria.</div>
+{% endif %}
+
+{% for student in students %}
+<!-- Edit modal -->
+<div class="ti10-modal-overlay" id="editModal{{ student.id }}">
+  <div class="ti10-modal-box">
+    <div class="ti10-modal-header">
+      <h5>Edit Student: {{ student.name }}</h5>
+      <button type="button" class="ti10-modal-close" onclick="ti10CloseModal('editModal{{ student.id }}')">&times;</button>
+    </div>
+    <form method="POST" action="{{ url_for('admin_edit_student', sid=student.id) }}">
+      <div class="ti10-modal-body">
+        <input type="hidden" name="status_filter" value="{{ status_filter }}">
+        <div class="mb-3">
+          <label class="form-label">Register Number</label>
+          <input type="text" name="register_no" class="form-control" value="{{ student.register_no }}" required autocomplete="off">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Name</label>
+          <input type="text" name="name" class="form-control" value="{{ student.name }}" required autocomplete="off">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Email</label>
+          <input type="email" name="email" class="form-control" value="{{ student.email }}" required autocomplete="off">
+        </div>
+      </div>
+      <div class="ti10-modal-footer">
+        <button type="button" class="btn btn-outline-secondary" onclick="ti10CloseModal('editModal{{ student.id }}')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Reset password modal -->
+<div class="ti10-modal-overlay" id="resetModal{{ student.id }}">
+  <div class="ti10-modal-box">
+    <div class="ti10-modal-header">
+      <h5>Reset Password for {{ student.name }}</h5>
+      <button type="button" class="ti10-modal-close" onclick="ti10CloseModal('resetModal{{ student.id }}')">&times;</button>
+    </div>
+    <form method="POST" action="{{ url_for('admin_reset_student_password', sid=student.id) }}">
+      <div class="ti10-modal-body">
+        <input type="hidden" name="status_filter" value="{{ status_filter }}">
+        <div class="mb-3">
+          <label class="form-label">New Password (min 6 characters)</label>
+          <input type="text" name="new_password" class="form-control" required minlength="6" autocomplete="off">
+          <small class="text-muted">Share this password securely with the student.</small>
+        </div>
+      </div>
+      <div class="ti10-modal-footer">
+        <button type="button" class="btn btn-outline-secondary" onclick="ti10CloseModal('resetModal{{ student.id }}')">Cancel</button>
+        <button type="submit" class="btn btn-warning">Reset Password</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endfor %}
 
 <div class="card mt-4 border-danger">
   <div class="card-body">
@@ -102,63 +161,18 @@
   </div>
 </div>
 
-{% for student in students %}
-<div class="modal fade" id="editModal{{ student.id }}" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Edit Student: {{ student.name }}</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      <form method="POST" action="{{ url_for('admin_edit_student', sid=student.id) }}">
-        <div class="modal-body">
-          <input type="hidden" name="status_filter" value="{{ status_filter }}">
-          <div class="mb-3">
-            <label class="form-label">Register Number</label>
-            <input type="text" name="register_no" class="form-control" value="{{ student.register_no }}" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Name</label>
-            <input type="text" name="name" class="form-control" value="{{ student.name }}" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Email</label>
-            <input type="email" name="email" class="form-control" value="{{ student.email }}" required>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-primary">Save Changes</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-
-<div class="modal fade" id="resetModal{{ student.id }}" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Reset Password for {{ student.name }}</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      <form method="POST" action="{{ url_for('admin_reset_student_password', sid=student.id) }}">
-        <div class="modal-body">
-          <input type="hidden" name="status_filter" value="{{ status_filter }}">
-          <div class="mb-3">
-            <label class="form-label">New Password (min 6 characters)</label>
-            <input type="text" name="new_password" class="form-control" required minlength="6">
-            <small class="text-muted">Share this password securely with the student.</small>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-warning">Reset Password</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-{% endfor %}
+<script>
+function ti10OpenModal(id) {
+  document.getElementById(id).classList.add('active');
+}
+function ti10CloseModal(id) {
+  document.getElementById(id).classList.remove('active');
+}
+document.addEventListener('click', function (e) {
+  if (e.target.classList.contains('ti10-modal-overlay')) {
+    e.target.classList.remove('active');
+  }
+});
+</script>
 
 {% endblock %}
