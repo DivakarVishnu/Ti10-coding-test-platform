@@ -825,6 +825,28 @@ def admin_unrelease_question(qid):
     return redirect(url_for("admin_dashboard"))
 
 
+@app.route("/admin/questions/archive-year", methods=["POST"])
+@admin_required
+def admin_archive_year():
+    year = request.form.get("year", "").strip()
+    q = Question.query
+    if year:
+        q = q.filter_by(year=year)
+    questions = q.all()
+    count = 0
+    for question in questions:
+        if question.is_released:
+            question.is_released = False
+            count += 1
+    db.session.commit()
+    flash(
+        f"Archived {count} question(s){' for ' + year if year else ''}. "
+        "They're hidden from students but not deleted — you can re-release any of them later.",
+        "success",
+    )
+    return redirect(url_for("admin_dashboard", year=year))
+
+
 # --------------------------------------------------------------------------
 # Admin submissions / review / re-run / export
 # --------------------------------------------------------------------------

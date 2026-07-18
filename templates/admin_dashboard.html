@@ -72,11 +72,20 @@
 </div>
 
 {% if years %}
-<div class="btn-group mb-3 flex-wrap" role="group">
-  <a href="{{ url_for('admin_dashboard') }}" class="btn btn-sm {{ 'btn-primary' if not year_filter else 'btn-outline-secondary' }}">All Years</a>
-  {% for y in years %}
-    <a href="{{ url_for('admin_dashboard', year=y) }}" class="btn btn-sm {{ 'btn-primary' if year_filter == y else 'btn-outline-secondary' }}">{{ y }}</a>
-  {% endfor %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <div class="btn-group flex-wrap" role="group">
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-sm {{ 'btn-primary' if not year_filter else 'btn-outline-secondary' }}">All Years</a>
+    {% for y in years %}
+      <a href="{{ url_for('admin_dashboard', year=y) }}" class="btn btn-sm {{ 'btn-primary' if year_filter == y else 'btn-outline-secondary' }}">{{ y }}</a>
+    {% endfor %}
+  </div>
+  {% if year_filter %}
+  <form method="POST" action="{{ url_for('admin_archive_year') }}"
+        onsubmit="return confirm('Hide all released questions for {{ year_filter }} from students? You can re-release any of them individually later.')">
+    <input type="hidden" name="year" value="{{ year_filter }}">
+    <button class="btn btn-sm btn-outline-warning">Archive {{ year_filter }} Test</button>
+  </form>
+  {% endif %}
 </div>
 {% endif %}
 
