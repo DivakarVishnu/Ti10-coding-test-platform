@@ -1,319 +1,159 @@
 {% extends "base.html" %}
-
-{% block title %}Students - Ti10 Admin{% endblock %}
-
+{% block title %}Students — Ti10 Admin{% endblock %}
 {% block content %}
-<style>
-/* ==========================================================================
-   Ti10 — design tokens
-   ========================================================================== */
-:root {
-  --bg: #09090f;
-  --bg-elevated: #0f0e1a;
-  --card-bg: rgba(255, 255, 255, 0.035);
-  --card-bg-solid: #131224;
-  --card-border: rgba(168, 120, 255, 0.16);
-  --card-border-hover: rgba(168, 120, 255, 0.35);
-  --accent: #a855f7;
-  --accent-2: #7c3aed;
-  --accent-soft: rgba(168, 85, 247, 0.14);
-  --accent-glow: rgba(168, 85, 247, 0.55);
-  --text-primary: #f3f0fa;
-  --text-muted: #9c93b5;
-  --text-faint: #655d7d;
-  --success: #34d399;
-  --danger: #f87171;
-  --warning: #fbbf24;
-  --radius: 16px;
-  --font-display: 'Space Grotesk', 'Inter', sans-serif;
-  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
-}
-* { box-sizing: border-box; }
-html, body {
-  margin: 0;
-  background: radial-gradient(ellipse 1200px 800px at 20% -10%, rgba(124, 58, 237, 0.16), transparent),
-              radial-gradient(ellipse 900px 700px at 100% 10%, rgba(168, 85, 247, 0.10), transparent),
-              var(--bg);
-  background-attachment: fixed;
-  color: var(--text-primary);
-  font-family: var(--font-body);
-  min-height: 100vh;
-}
-h1,h2,h3,h4,h5,h6 { font-family: var(--font-display); letter-spacing: -0.01em; margin: 0; }
-code, pre { font-family: var(--font-mono); }
-::selection { background: var(--accent-soft); }
 
-.site-bg-scene { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
-.site-moon {
-  position: absolute; top: 6%; right: 8%; width: 70px; height: 70px; border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #f3f0fa, #d8b4fe 60%, transparent 75%);
-  box-shadow: 0 0 50px 14px var(--accent-glow), 0 0 110px 40px rgba(168,85,247,0.18);
-  opacity: 0.55;
-}
-.site-star {
-  position: absolute; width: 2px; height: 2px; background: #fff; border-radius: 50%;
-  animation: siteTwinkle 3.2s ease-in-out infinite; opacity: 0.35;
-}
-@keyframes siteTwinkle { 0%,100% { opacity:.1; transform:scale(1);} 50% { opacity:.6; transform:scale(1.5);} }
-
-.navbar {
-  position: sticky; top: 0; z-index: 40;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0.85rem 1.5rem;
-  background: rgba(10, 9, 18, 0.75);
-  backdrop-filter: blur(16px);
-  border-bottom: 1px solid var(--card-border);
-}
-.navbar-brand {
-  font-weight: 700; font-size: 1.3rem;
-  background: linear-gradient(135deg, #e9d5ff, var(--accent) 60%, var(--accent-2));
-  -webkit-background-clip: text; background-clip: text; color: transparent;
-}
-.navbar-tag { color: var(--text-muted); font-size: 0.85rem; }
-
-.container { max-width: 1160px; margin: 0 auto; padding: 2rem 1.25rem 4rem; position: relative; z-index: 1; }
-.page-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .75rem; margin-bottom: 1.5rem; }
-
-.btn {
-  border-radius: 10px; font-weight: 600; font-size: .85rem; padding: 0.5rem 1.05rem;
-  border: none; cursor: pointer; transition: all .15s ease;
-  display: inline-flex; align-items: center; gap: .4rem; white-space: nowrap;
-}
-.btn:active { transform: scale(0.96); }
-.btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; box-shadow: 0 4px 20px rgba(168,85,247,0.25); }
-.btn-primary:hover { background: linear-gradient(135deg,#b968f8,#8b4ceb); box-shadow: 0 6px 28px var(--accent-glow); transform: translateY(-1px); }
-.btn-success { background: linear-gradient(135deg,#34d399,#10b981); color:#06281c; box-shadow: 0 4px 18px rgba(52,211,153,0.25); }
-.btn-success:hover { box-shadow: 0 6px 24px rgba(52,211,153,0.4); transform: translateY(-1px); }
-.btn-danger { background: linear-gradient(135deg,#f87171,#dc2626); color:#fff; box-shadow: 0 4px 18px rgba(248,113,113,0.25); }
-.btn-danger:hover { box-shadow: 0 6px 24px rgba(248,113,113,.4); transform: translateY(-1px); }
-.btn-warning { background: linear-gradient(135deg,#fbbf24,#f59e0b); color:#3a2600; box-shadow: 0 4px 18px rgba(251,191,36,.25); }
-.btn-warning:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(251,191,36,.4); }
-.btn-info { background: var(--accent-soft); color: #e9d5ff; border: 1px solid rgba(168,85,247,.35); }
-.btn-info:hover { background: rgba(168,85,247,.22); border-color: var(--accent); }
-.btn-outline { background: transparent; border: 1px solid var(--card-border); color: var(--text-muted); }
-.btn-outline:hover { background: rgba(255,255,255,.05); color: var(--text-primary); border-color: var(--card-border-hover); }
-.btn-sm { padding: .38rem .8rem; font-size: .78rem; }
-
-.form-control, .form-select {
-  width: 100%; background: rgba(255,255,255,.04); border: 1px solid var(--card-border);
-  color: var(--text-primary); border-radius: 10px; padding: .55rem .8rem;
-  font-size: .9rem; transition: all .15s ease;
-}
-.form-control:focus, .form-select:focus {
-  outline: none; background: rgba(255,255,255,.06); border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
-}
-.form-control::placeholder { color: var(--text-faint); }
-.form-label { display:block; color: var(--text-muted); font-weight: 500; font-size: .8rem; margin-bottom: .35rem; }
-
-.toolbar { display:flex; gap:.6rem; flex-wrap:wrap; align-items:center; margin-bottom:1.25rem; }
-.toolbar .form-select { width: auto; min-width: 150px; }
-.toolbar .search-wrap { position: relative; flex: 1; min-width: 220px; }
-.toolbar .search-wrap i { position:absolute; left:.75rem; top:50%; transform:translateY(-50%); color:var(--text-faint); }
-.toolbar .search-wrap input { padding-left: 2.1rem; }
-.result-count { color: var(--text-muted); font-size: .85rem; }
-
-.table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--card-border); background: var(--card-bg-solid); }
-table { width: 100%; border-collapse: collapse; }
-thead { color: var(--text-muted); font-size: .74rem; text-transform: uppercase; letter-spacing: .05em; }
-th, td { padding: .85rem 1rem; text-align: left; border-bottom: 1px solid var(--card-border); vertical-align: middle; }
-tbody tr { transition: background .15s ease; }
-tbody tr:hover { background: rgba(168,85,247,0.05); }
-tbody tr:last-child td { border-bottom: none; }
-.mono { font-family: var(--font-mono); font-size: .82rem; color: #d8d3e8; }
-.muted-cell { color: var(--text-muted); font-size: .82rem; }
-
-.badge { font-weight: 600; padding: .32em .7em; border-radius: 8px; font-size: .74rem; display: inline-flex; align-items:center; gap:.3em; }
-.badge.b-success { background: rgba(52,211,153,.18); color: var(--success); border:1px solid rgba(52,211,153,.3); }
-.badge.b-warning { background: rgba(251,191,36,.18); color: var(--warning); border:1px solid rgba(251,191,36,.3); }
-.badge.b-danger { background: rgba(248,113,113,.18); color: var(--danger); border:1px solid rgba(248,113,113,.3); }
-.badge.b-secondary { background: rgba(255,255,255,.08); color: var(--text-muted); }
-.dot { width:6px; height:6px; border-radius:50%; background: currentColor; box-shadow: 0 0 6px currentColor; }
-.actions { display:flex; gap:.4rem; flex-wrap:wrap; }
-
-/* Modal styles using Bootstrap classes */
-.modal-content {
-  background: var(--card-bg-solid);
-  border: 1px solid var(--card-border-hover);
-}
-.modal-header {
-  border-bottom: 1px solid var(--card-border);
-}
-.modal-footer {
-  border-top: 1px solid var(--card-border);
-}
-.modal-backdrop {
-  background: rgba(5,4,10,0.6);
-  backdrop-filter: blur(4px);
-}
-.empty-state { text-align:center; padding: 3rem 1rem; color: var(--text-muted); }
-.empty-state i { font-size: 2.2rem; display:block; margin-bottom:.6rem; color: var(--text-faint); }
-
-@media (max-width: 640px) {
-  .container { padding: 1.25rem 0.9rem 3rem; }
-  th, td { padding: .65rem .6rem; font-size: .82rem; }
-}
-</style>
-
-<div class="site-bg-scene"><div class="site-moon"></div><div class="site-stars" id="siteStars"></div></div>
-
-<nav class="navbar">
-  <span class="navbar-brand">Ti10 Admin</span>
-  <span class="navbar-tag">Students</span>
-</nav>
-
-<div class="container">
-
-  <div class="page-head">
-    <h2>Students</h2>
-    <span class="badge b-warning"><span class="dot"></span> Pending: {{ pending_count }}</span>
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <h4 class="mb-0">Students</h4>
+  <div class="d-flex align-items-center gap-2">
+    <span class="badge bg-warning">Pending: {{ pending_count }}</span>
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary btn-sm">&larr; Dashboard</a>
   </div>
-
-  <!-- Filter and Search -->
-  <div class="toolbar">
-    <form method="GET" action="{{ url_for('admin_students') }}" class="d-flex flex-wrap gap-2 w-100">
-      <select name="status" class="form-select" style="width: auto; min-width: 150px;" onchange="this.form.submit()">
-        <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
-        <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Approved</option>
-        <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
-        <option value="deactivated" {% if status_filter == 'deactivated' %}selected{% endif %}>Deactivated</option>
-      </select>
-      <div class="search-wrap" style="flex: 1; min-width: 200px;">
-        <i class="bi bi-search"></i>
-        <input type="text" name="search" class="form-control" placeholder="Search by name, email, or register no..." value="{{ search_query or '' }}">
-      </div>
-      <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Search</button>
-      {% if search_query %}
-      <a href="{{ url_for('admin_students', status=status_filter) }}" class="btn btn-outline"><i class="bi bi-x-circle"></i> Clear</a>
-      {% endif %}
-      <span class="result-count ms-auto">{{ students|length }} student(s) found</span>
-    </form>
-  </div>
-
-  <!-- Table -->
-  {% if students %}
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>#</th><th>Name</th><th>Email</th><th>Register No</th><th>Year</th><th>Status</th><th>Joined</th><th style="min-width:220px;">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for student in students %}
-        <tr>
-          <td class="muted-cell">{{ student.id }}</td>
-          <td><strong>{{ student.name }}</strong></td>
-          <td class="muted-cell">{{ student.email }}</td>
-          <td class="mono">{{ student.register_no }}</td>
-          <td class="muted-cell">{{ student.year or 'Not set' }}</td>
-          <td>
-            <span class="badge {% if student.status == 'approved' %}b-success{% elif student.status == 'pending' %}b-warning{% elif student.status == 'rejected' %}b-danger{% else %}b-secondary{% endif %}">
-              <i class="bi bi-{% if student.status == 'approved' %}check-circle{% elif student.status == 'pending' %}hourglass-split{% elif student.status == 'rejected' %}x-circle{% else %}slash-circle{% endif %}"></i>
-              {{ student.status }}
-            </span>
-          </td>
-          <td class="muted-cell">{{ student.created_at|ist }}</td>
-          <td>
-            <div class="actions">
-              {% if student.status == 'pending' %}
-              <form method="POST" action="{{ url_for('admin_approve_student', sid=student.id) }}" class="d-inline">
-                <input type="hidden" name="status_filter" value="{{ status_filter }}">
-                <button type="submit" class="btn btn-success btn-sm"><i class="bi bi-check-lg"></i> Approve</button>
-              </form>
-              <form method="POST" action="{{ url_for('admin_reject_student', sid=student.id) }}" class="d-inline">
-                <input type="hidden" name="status_filter" value="{{ status_filter }}">
-                <button type="submit" class="btn btn-danger btn-sm"><i class="bi bi-x-lg"></i> Reject</button>
-              </form>
-              {% elif student.status == 'approved' %}
-              <form method="POST" action="{{ url_for('admin_deactivate_student', sid=student.id) }}" class="d-inline">
-                <input type="hidden" name="status_filter" value="{{ status_filter }}">
-                <button type="submit" class="btn btn-warning btn-sm"><i class="bi bi-pause-circle"></i> Deactivate</button>
-              </form>
-              {% elif student.status == 'deactivated' %}
-              <form method="POST" action="{{ url_for('admin_reactivate_student', sid=student.id) }}" class="d-inline">
-                <input type="hidden" name="status_filter" value="{{ status_filter }}">
-                <button type="submit" class="btn btn-success btn-sm"><i class="bi bi-play-circle"></i> Reactivate</button>
-              </form>
-              {% endif %}
-              
-              <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#editModal{{ student.id }}">
-                <i class="bi bi-pencil"></i> Edit
-              </button>
-              <button type="button" class="btn btn-outline btn-sm" data-bs-toggle="modal" data-bs-target="#resetModal{{ student.id }}">
-                <i class="bi bi-key"></i> Reset PW
-              </button>
-            </div>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-  {% else %}
-  <div class="empty-state">
-    <i class="bi bi-person-x"></i>
-    No students found matching your criteria.
-  </div>
-  {% endif %}
-
 </div>
 
-<!-- Edit Modals -->
+<form method="GET" action="{{ url_for('admin_students') }}" class="d-flex flex-wrap gap-2 mb-3">
+  <select name="status" class="form-select w-auto" onchange="this.form.submit()">
+    <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+    <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Approved</option>
+    <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+    <option value="deactivated" {% if status_filter == 'deactivated' %}selected{% endif %}>Deactivated</option>
+  </select>
+  <input type="text" name="search" class="form-control" style="max-width:260px;"
+         placeholder="Search name, email, register no..." value="{{ search_query or '' }}">
+  <button type="submit" class="btn btn-primary btn-sm">Search</button>
+  {% if search_query %}
+    <a href="{{ url_for('admin_students', status=status_filter) }}" class="btn btn-outline-secondary btn-sm">Clear</a>
+  {% endif %}
+  <span class="text-muted small align-self-center ms-auto">{{ students|length }} student(s) found</span>
+</form>
+
+<div class="table-responsive">
+<table class="table table-bordered bg-white">
+  <thead>
+    <tr>
+      <th>Name</th><th>Email</th><th>Register No</th><th>Year</th><th>Status</th><th>Joined</th><th style="min-width:260px;">Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for student in students %}
+    <tr>
+      <td><strong>{{ student.name }}</strong></td>
+      <td class="text-muted small">{{ student.email }}</td>
+      <td class="font-mono">{{ student.register_no }}</td>
+      <td class="text-muted small">{{ student.year or '—' }}</td>
+      <td>
+        <span class="badge {% if student.status == 'approved' %}bg-success{% elif student.status == 'pending' %}bg-warning{% elif student.status == 'rejected' %}bg-danger{% else %}bg-secondary{% endif %}">
+          {{ student.status }}
+        </span>
+      </td>
+      <td class="text-muted small">{{ student.created_at | ist }}</td>
+      <td>
+        <div class="d-flex flex-wrap gap-1">
+          {% if student.status == 'pending' %}
+            <form method="POST" action="{{ url_for('admin_approve_student', sid=student.id) }}" class="d-inline">
+              <input type="hidden" name="status_filter" value="{{ status_filter }}">
+              <button type="submit" class="btn btn-sm btn-success">Approve</button>
+            </form>
+            <form method="POST" action="{{ url_for('admin_reject_student', sid=student.id) }}" class="d-inline">
+              <input type="hidden" name="status_filter" value="{{ status_filter }}">
+              <button type="submit" class="btn btn-sm btn-outline-danger">Reject</button>
+            </form>
+          {% elif student.status == 'approved' %}
+            <form method="POST" action="{{ url_for('admin_deactivate_student', sid=student.id) }}" class="d-inline">
+              <input type="hidden" name="status_filter" value="{{ status_filter }}">
+              <button type="submit" class="btn btn-sm btn-outline-warning">Deactivate</button>
+            </form>
+          {% elif student.status == 'deactivated' %}
+            <form method="POST" action="{{ url_for('admin_reactivate_student', sid=student.id) }}" class="d-inline">
+              <input type="hidden" name="status_filter" value="{{ status_filter }}">
+              <button type="submit" class="btn btn-sm btn-success">Reactivate</button>
+            </form>
+          {% endif %}
+
+          <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editModal{{ student.id }}">
+            Edit
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#resetModal{{ student.id }}">
+            Reset PW
+          </button>
+        </div>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="7" class="text-muted">No students found matching your criteria.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+
+<div class="card mt-4 border-danger">
+  <div class="card-body">
+    <h6 class="text-danger">Clear Submission Data</h6>
+    <p class="text-muted small">Deletes submissions, drafts and question timers for the selected year (or everyone if left blank). Student accounts are kept.</p>
+    <form method="POST" action="{{ url_for('admin_clear_student_data') }}" class="d-flex gap-2"
+          onsubmit="return confirm('This permanently deletes submissions/drafts for the selected year. Continue?')">
+      <select name="year" class="form-select w-auto">
+        <option value="">All years</option>
+        {% for y in years %}
+          <option value="{{ y }}">{{ y }}</option>
+        {% endfor %}
+      </select>
+      <button class="btn btn-outline-danger">Clear Data</button>
+    </form>
+  </div>
+</div>
+
 {% for student in students %}
 <div class="modal fade" id="editModal{{ student.id }}" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title"><i class="bi bi-pencil-square text-primary"></i> Edit Student: {{ student.name }}</h5>
+        <h5 class="modal-title">Edit Student: {{ student.name }}</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <form method="POST" action="{{ url_for('admin_edit_student', sid=student.id) }}">
         <div class="modal-body">
           <input type="hidden" name="status_filter" value="{{ status_filter }}">
           <div class="mb-3">
-            <label class="form-label"><i class="bi bi-hash"></i> Register Number</label>
+            <label class="form-label">Register Number</label>
             <input type="text" name="register_no" class="form-control" value="{{ student.register_no }}" required>
           </div>
           <div class="mb-3">
-            <label class="form-label"><i class="bi bi-person"></i> Name</label>
+            <label class="form-label">Name</label>
             <input type="text" name="name" class="form-control" value="{{ student.name }}" required>
           </div>
           <div class="mb-3">
-            <label class="form-label"><i class="bi bi-envelope"></i> Email</label>
+            <label class="form-label">Email</label>
             <input type="email" name="email" class="form-control" value="{{ student.email }}" required>
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-outline" data-bs-dismiss="modal"><i class="bi bi-x-circle"></i> Cancel</button>
-          <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle"></i> Save Changes</button>
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
         </div>
       </form>
     </div>
   </div>
 </div>
 
-<!-- Reset Password Modals -->
 <div class="modal fade" id="resetModal{{ student.id }}" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title"><i class="bi bi-key text-warning"></i> Reset Password for {{ student.name }}</h5>
+        <h5 class="modal-title">Reset Password for {{ student.name }}</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <form method="POST" action="{{ url_for('admin_reset_student_password', sid=student.id) }}">
         <div class="modal-body">
           <input type="hidden" name="status_filter" value="{{ status_filter }}">
           <div class="mb-3">
-            <label class="form-label"><i class="bi bi-lock"></i> New Password (min 6 characters)</label>
+            <label class="form-label">New Password (min 6 characters)</label>
             <input type="text" name="new_password" class="form-control" required minlength="6">
-            <small class="text-muted"><i class="bi bi-info-circle"></i> Share this password securely with the student.</small>
+            <small class="text-muted">Share this password securely with the student.</small>
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-outline" data-bs-dismiss="modal"><i class="bi bi-x-circle"></i> Cancel</button>
-          <button type="submit" class="btn btn-warning"><i class="bi bi-key-fill"></i> Reset Password</button>
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-warning">Reset Password</button>
         </div>
       </form>
     </div>
@@ -321,18 +161,4 @@ tbody tr:last-child td { border-bottom: none; }
 </div>
 {% endfor %}
 
-<script>
-// ambient stars
-const starsWrap = document.getElementById('siteStars');
-if (starsWrap) {
-  for (let i = 0; i < 40; i++) {
-    const star = document.createElement('div');
-    star.className = 'site-star';
-    star.style.left = Math.random() * 100 + '%';
-    star.style.top = Math.random() * 100 + '%';
-    star.style.animationDelay = (Math.random() * 3.2) + 's';
-    starsWrap.appendChild(star);
-  }
-}
-</script>
 {% endblock %}
