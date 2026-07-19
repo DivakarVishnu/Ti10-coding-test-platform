@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Similarity Check — Ti10 Admin{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <h4 class="mb-0">Submission Similarity Check</h4>
+  <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary btn-sm">&larr; Dashboard</a>
+</div>
+
+<form method="GET" class="d-flex flex-wrap gap-2 mb-3 align-items-center">
+  <select name="question_id" class="form-select w-auto" onchange="this.form.submit()">
+    <option value="">Select a question...</option>
+    {% for q in questions %}
+      <option value="{{ q.id }}" {% if selected_qid == q.id %}selected{% endif %}>{{ q.title }}</option>
+    {% endfor %}
+  </select>
+  <select name="threshold" class="form-select w-auto" onchange="this.form.submit()">
+    <option value="0.95" {% if threshold == 0.95 %}selected{% endif %}>95%+ match (near-identical)</option>
+    <option value="0.85" {% if threshold == 0.85 %}selected{% endif %}>85%+ match</option>
+    <option value="0.7" {% if threshold == 0.7 %}selected{% endif %}>70%+ match</option>
+  </select>
+</form>
+
+{% if selected_qid %}
+  <p class="text-muted small">Comparing raw submitted code as text — different variable names or formatting will lower the score even if logic is copied. Use as a lead for manual review, not proof on its own.</p>
+  <div class="table-responsive">
+  <table class="table table-bordered bg-white">
+    <thead><tr><th>Student A</th><th>Student B</th><th>Similarity</th><th></th></tr></thead>
+    <tbody>
+      {% for p in pairs %}
+      <tr>
+        <td>{{ p.a.student.name }} ({{ p.a.student.register_no }})</td>
+        <td>{{ p.b.student.name }} ({{ p.b.student.register_no }})</td>
+        <td><span class="badge {% if p.similarity >= 95 %}bg-danger{% else %}bg-warning{% endif %}">{{ p.similarity }}%</span></td>
+        <td>
+          <a href="{{ url_for('admin_view_submission', sub_id=p.a.id) }}" class="btn btn-sm btn-outline-primary">View A</a>
+          <a href="{{ url_for('admin_view_submission', sub_id=p.b.id) }}" class="btn btn-sm btn-outline-primary">View B</a>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="4" class="text-muted">No matches at or above this threshold.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+{% endif %}
+{% endblock %}

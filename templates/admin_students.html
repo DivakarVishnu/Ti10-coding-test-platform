@@ -110,6 +110,16 @@
           <label class="form-label">Email</label>
           <input type="email" name="email" class="form-control" value="{{ student.email }}" required autocomplete="off">
         </div>
+        <div class="mb-3">
+          <label class="form-label">Year / Batch</label>
+          <input type="text" name="year" class="form-control" value="{{ student.year or '' }}"
+                 list="year-suggestions" placeholder="e.g. II CSE B" autocomplete="off">
+          <datalist id="year-suggestions">
+            {% for y in years %}
+              <option value="{{ y }}">
+            {% endfor %}
+          </datalist>
+        </div>
       </div>
       <div class="ti10-modal-footer">
         <button type="button" class="btn btn-outline-secondary" onclick="ti10CloseModal('editModal{{ student.id }}')">Cancel</button>

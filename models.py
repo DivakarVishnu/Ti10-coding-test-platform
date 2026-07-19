@@ -148,6 +148,15 @@ class Submission(db.Model):
     submitted_at = db.Column(db.DateTime, default=utcnow)
 
 
+class AdminActivityLog(db.Model):
+    __tablename__ = "admin_activity_log"
+    id = db.Column(db.Integer, primary_key=True)
+    admin_username = db.Column(db.String(80), nullable=True)
+    action = db.Column(db.String(120), nullable=False)
+    details = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+
+
 class Feedback(db.Model):
     __tablename__ = "feedback"
     id = db.Column(db.Integer, primary_key=True)

@@ -13,9 +13,10 @@ from flask import (
 from config import Config
 from models import (
     db, Admin, Student, Settings, Question, TestCase,
-    Submission, Draft, QuestionAttempt, Feedback, AboutPage, utcnow
+    Submission, Draft, QuestionAttempt, Feedback, AboutPage, AdminActivityLog, utcnow
 )
 import judge0_client as judge0
+from difflib import SequenceMatcher
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -42,7 +43,7 @@ with app.app_context():
 @app.before_request
 def _check_db():
     from sqlalchemy import inspect
-    required_tables = {"settings", "students", "questions", "about_page", "feedback"}
+    required_tables = {"settings", "students", "questions", "about_page", "feedback", "admin_activity_log"}
     try:
         existing = set(inspect(db.engine).get_table_names())
         if not required_tables.issubset(existing):
@@ -54,6 +55,19 @@ def _check_db():
 
 
 LANGUAGES = judge0.LANGUAGES
+
+
+def log_activity(action, details=""):
+    try:
+        entry = AdminActivityLog(
+            admin_username=session.get("admin_username"),
+            action=action,
+            details=details,
+        )
+        db.session.add(entry)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
 
 
 def to_ist(dt):
@@ -546,6 +560,7 @@ def admin_login():
             session.clear()
             session["admin_id"] = admin.id
             session["admin_username"] = admin.username
+            log_activity("Login", f"{admin.username} logged in.")
             return redirect(url_for("admin_dashboard"))
         flash("Invalid credentials.", "error")
     return render_template("admin_login.html")
@@ -602,10 +617,11 @@ def admin_students():
 def admin_approve_student(sid):
     s = Student.query.get_or_404(sid)
     s.status = "approved"
-    year = request.form.get("year", "").strip()
+    year = " ".join(request.form.get("year", "").split())
     if year:
         s.year = year
     db.session.commit()
+    log_activity("Approve Student", f"{s.name} ({s.register_no}) approved.")
     flash(f"{s.name} approved.", "success")
     return redirect(url_for("admin_students", status="pending"))
 
@@ -616,6 +632,7 @@ def admin_reject_student(sid):
     s = Student.query.get_or_404(sid)
     s.status = "rejected"
     db.session.commit()
+    log_activity("Reject Student", f"{s.name} ({s.register_no}) rejected.")
     flash(f"{s.name} rejected.", "success")
     return redirect(url_for("admin_students", status="pending"))
 
@@ -624,7 +641,7 @@ def admin_reject_student(sid):
 @admin_required
 def admin_set_student_year(sid):
     s = Student.query.get_or_404(sid)
-    s.year = request.form.get("year", "").strip() or None
+    s.year = " ".join(request.form.get("year", "").split()) or None
     db.session.commit()
     flash(f"Year updated for {s.name}.", "success")
     return redirect(url_for("admin_students", status=request.form.get("status_filter", "approved")))
@@ -637,6 +654,8 @@ def admin_edit_student(sid):
     new_regno = request.form.get("register_no", "").strip()
     new_name = request.form.get("name", "").strip()
     new_email = request.form.get("email", "").strip().lower()
+    new_year = " ".join(request.form.get("year", "").split())
+    new_year = request.form.get("year", "").strip()
 
     if not new_regno or not new_name or not new_email:
         flash("Name, email and register number can't be empty.", "error")
@@ -654,6 +673,7 @@ def admin_edit_student(sid):
     s.register_no = new_regno
     s.name = new_name
     s.email = new_email
+    s.year = new_year or None
     db.session.commit()
     flash(f"Updated details for {s.name}.", "success")
     return redirect(url_for("admin_students", status=request.form.get("status_filter", "approved")))
@@ -665,6 +685,7 @@ def admin_deactivate_student(sid):
     s = Student.query.get_or_404(sid)
     s.status = "deactivated"
     db.session.commit()
+    log_activity("Deactivate Student", f"{s.name} ({s.register_no}) deactivated.")
     flash(f"{s.name}'s account has been deactivated. They can no longer log in.", "success")
     return redirect(url_for("admin_students", status=request.form.get("status_filter", "approved")))
 
@@ -710,6 +731,7 @@ def admin_clear_student_data():
     Draft.query.filter(Draft.student_id.in_(student_ids)).delete(synchronize_session=False)
     QuestionAttempt.query.filter(QuestionAttempt.student_id.in_(student_ids)).delete(synchronize_session=False)
     db.session.commit()
+    log_activity("Clear Data", f"Cleared submissions for {len(student_ids)} student(s){' in ' + year if year else ' (all years)'}.")
     flash(
         f"Cleared submissions/drafts for {len(student_ids)} student(s)"
         f"{' in year ' + year if year else ''}. Accounts kept.",
@@ -889,6 +911,7 @@ def admin_release_question(qid):
     q.is_released = True
     q.released_at = utcnow()
     db.session.commit()
+    log_activity("Release Question", f'"{q.title}" (year: {q.year or "All"}) released.')
     flash(f'"{q.title}" released to students.', "success")
     return redirect(url_for("admin_dashboard"))
 
@@ -899,7 +922,42 @@ def admin_unrelease_question(qid):
     q = Question.query.get_or_404(qid)
     q.is_released = False
     db.session.commit()
+    log_activity("Hide Question", f'"{q.title}" hidden.')
     flash(f'"{q.title}" hidden from students.', "success")
+    return redirect(url_for("admin_dashboard"))
+
+
+@app.route("/admin/question/<int:qid>/duplicate", methods=["POST"])
+@admin_required
+def admin_duplicate_question(qid):
+    original = Question.query.get_or_404(qid)
+    clone = Question(
+        title=f"{original.title} (Copy)",
+        description=original.description,
+        image_filename=original.image_filename,
+        marks=original.marks,
+        time_limit_sec=original.time_limit_sec,
+        memory_limit_kb=original.memory_limit_kb,
+        question_time_limit_min=original.question_time_limit_min,
+        allowed_languages=original.allowed_languages,
+        is_published=True,
+        year=original.year,
+        is_released=False,
+    )
+    db.session.add(clone)
+    db.session.flush()
+
+    for tc in original.test_cases:
+        db.session.add(TestCase(
+            question_id=clone.id,
+            input=tc.input,
+            expected_output=tc.expected_output,
+            is_hidden=tc.is_hidden,
+        ))
+
+    db.session.commit()
+    log_activity("Duplicate Question", f'Cloned "{original.title}" as "{clone.title}".')
+    flash(f'Duplicated "{original.title}". Edit and release the copy when ready.', "success")
     return redirect(url_for("admin_dashboard"))
 
 
@@ -917,6 +975,7 @@ def admin_archive_year():
             question.is_released = False
             count += 1
     db.session.commit()
+    log_activity("Archive Year", f"Archived {count} question(s){' for ' + year if year else ''}.")
     flash(
         f"Archived {count} question(s){' for ' + year if year else ''}. "
         "They're hidden from students but not deleted — you can re-release any of them later.",
@@ -940,6 +999,7 @@ def admin_release_year():
             question.released_at = utcnow()
             count += 1
     db.session.commit()
+    log_activity("Release Year", f"Released {count} question(s){' for ' + year if year else ''} at once.")
     flash(
         f"Released {count} question(s){' for ' + year if year else ''} to students at once.",
         "success",
@@ -973,6 +1033,24 @@ def admin_submissions():
 def admin_view_submission(sub_id):
     sub = Submission.query.get_or_404(sub_id)
     return render_template("admin_submission_detail.html", sub=sub, LANGUAGES=LANGUAGES)
+
+
+@app.route("/admin/submission/<int:sub_id>/allow-reattempt", methods=["POST"])
+@admin_required
+def admin_allow_reattempt(sub_id):
+    sub = Submission.query.get_or_404(sub_id)
+    student_id = sub.student_id
+    question_id = sub.question_id
+    student_name = sub.student.name if sub.student else "Student"
+    question_title = sub.question.title if sub.question else "the question"
+
+    db.session.delete(sub)
+    QuestionAttempt.query.filter_by(student_id=student_id, question_id=question_id).delete()
+    Draft.query.filter_by(student_id=student_id, question_id=question_id).delete()
+    db.session.commit()
+
+    flash(f"{student_name} can now re-attempt \"{question_title}\".", "success")
+    return redirect(url_for("admin_submissions", question_id=request.form.get("selected_qid", type=int)))
 
 
 @app.route("/admin/submission/<int:sub_id>/rerun", methods=["POST"])
@@ -1066,13 +1144,74 @@ def admin_analytics():
     )
 
 
+@app.route("/admin/similarity")
+@admin_required
+def admin_similarity():
+    qid = request.args.get("question_id", type=int)
+    threshold = request.args.get("threshold", 0.85, type=float)
+    questions = Question.query.order_by(Question.id).all()
+    pairs = []
+
+    if qid:
+        subs = Submission.query.filter_by(question_id=qid).all()
+        for i in range(len(subs)):
+            for j in range(i + 1, len(subs)):
+                a, b = subs[i], subs[j]
+                if not a.code.strip() or not b.code.strip():
+                    continue
+                ratio = SequenceMatcher(None, a.code, b.code).ratio()
+                if ratio >= threshold:
+                    pairs.append({
+                        "a": a, "b": b,
+                        "similarity": round(ratio * 100, 1),
+                    })
+        pairs.sort(key=lambda p: p["similarity"], reverse=True)
+
+    return render_template(
+        "admin_similarity.html",
+        questions=questions,
+        selected_qid=qid,
+        threshold=threshold,
+        pairs=pairs,
+    )
+
+
+@app.route("/admin/activity")
+@admin_required
+def admin_activity():
+    logs = AdminActivityLog.query.order_by(AdminActivityLog.created_at.desc()).limit(300).all()
+    return render_template("admin_activity.html", logs=logs)
+
+
+@app.route("/admin/certificate/<int:sid>")
+@admin_required
+def admin_certificate(sid):
+    student = Student.query.get_or_404(sid)
+    subs = Submission.query.filter_by(student_id=sid).all()
+    total_score = sum(s.score or 0 for s in subs)
+    total_max = sum(s.max_score or 0 for s in subs)
+    pct = round((total_score / total_max) * 100, 1) if total_max else 0
+    return render_template(
+        "certificate.html",
+        student=student,
+        total_score=total_score,
+        total_max=total_max,
+        pct=pct,
+        questions_completed=len(subs),
+    )
+
+
 @app.route("/admin/export.csv")
 @admin_required
 def admin_export_csv():
     qid = request.args.get("question_id", type=int)
+    year = request.args.get("year", "").strip()
+
     query = Submission.query
     if qid:
         query = query.filter_by(question_id=qid)
+    if year:
+        query = query.join(Student).filter(Student.year == year)
     submissions = query.order_by(Submission.submitted_at.desc()).all()
 
     buf = io.StringIO()

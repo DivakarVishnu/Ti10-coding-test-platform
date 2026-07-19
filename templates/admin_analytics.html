@@ -3,7 +3,12 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
   <h4 class="mb-0">Result Analytics</h4>
-  <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary btn-sm">&larr; Dashboard</a>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('admin_export_csv', year=year_filter) }}" class="btn btn-success btn-sm">
+      Download {{ year_filter if year_filter else 'All Years' }} Report
+    </a>
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary btn-sm">&larr; Dashboard</a>
+  </div>
 </div>
 
 {% if years %}
@@ -35,8 +40,7 @@
     <h5>Leaderboard{% if year_filter %} — {{ year_filter }}{% endif %}</h5>
     <div class="table-responsive">
     <table class="table table-bordered bg-white">
-      <thead><tr><th>#</th><th>Name</th><th>Register No</th><th>Year</th><th>Score</th><th>%</th><th>Questions Attempted</th></tr></thead>
-      <tbody>
+<thead><tr><th>#</th><th>Name</th><th>Register No</th><th>Year</th><th>Score</th><th>%</th><th>Questions Attempted</th><th></th></tr></thead>      <tbody>
         {% for row in leaderboard %}
         <tr>
           <td>{{ loop.index }}</td>
@@ -46,6 +50,7 @@
           <td>{{ row.score }} / {{ row.max }}</td>
           <td>{{ row.pct }}%</td>
           <td>{{ row.count }}</td>
+          <td><a href="{{ url_for('admin_certificate', sid=row.student.id) }}" target="_blank" class="btn btn-sm btn-outline-secondary">Certificate</a></td>
         </tr>
         {% else %}
         <tr><td colspan="7" class="text-muted">No students found.</td></tr>

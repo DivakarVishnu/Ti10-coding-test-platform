@@ -38,7 +38,14 @@
       <td>{% if s.tab_switches %}<span class="text-danger">{{ s.tab_switches }}</span>{% else %}0{% endif %}</td>
       <td>{% if s.auto_submitted %}<span class="badge bg-warning">{{ s.auto_submit_reason }}</span>{% else %}—{% endif %}</td>
       <td>{{ s.submitted_at | ist }}</td>
-      <td><a href="{{ url_for('admin_view_submission', sub_id=s.id) }}" class="btn btn-sm btn-outline-primary">View Code</a></td>
+      <td class="text-nowrap">
+        <a href="{{ url_for('admin_view_submission', sub_id=s.id) }}" class="btn btn-sm btn-outline-primary">View Code</a>
+        <form method="POST" action="{{ url_for('admin_allow_reattempt', sub_id=s.id) }}" class="d-inline"
+              onsubmit="return confirm('Delete this submission so {{ s.student.name }} can re-attempt \'{{ s.question.title }}\'? This cannot be undone.')">
+          <input type="hidden" name="selected_qid" value="{{ selected_qid or '' }}">
+          <button type="submit" class="btn btn-sm btn-outline-warning">Allow Re-attempt</button>
+        </form>
+      </td>
     </tr>
     {% else %}
     <tr><td colspan="10" class="text-muted">No submissions yet.</td></tr>

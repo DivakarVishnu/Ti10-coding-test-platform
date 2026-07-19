@@ -67,6 +67,8 @@
   <a href="{{ url_for('admin_students') }}" class="btn btn-outline-secondary btn-sm">Students</a>
     <a href="{{ url_for('admin_submissions') }}" class="btn btn-outline-secondary btn-sm">Submissions</a>
     <a href="{{ url_for('admin_analytics') }}" class="btn btn-outline-secondary btn-sm">Analytics</a>
+    <a href="{{ url_for('admin_similarity') }}" class="btn btn-outline-secondary btn-sm">Similarity Check</a>
+    <a href="{{ url_for('admin_activity') }}" class="btn btn-outline-secondary btn-sm">Activity Log</a>
     <a href="{{ url_for('admin_feedback') }}" class="btn btn-outline-secondary btn-sm">Feedback</a>
     <a href="{{ url_for('admin_about') }}" class="btn btn-outline-secondary btn-sm">Edit About</a>
     <a href="{{ url_for('admin_new_question') }}" class="btn btn-primary btn-sm">+ New Question</a>
@@ -120,6 +122,9 @@
       <td>{% if q.is_released %}<span class="badge bg-success">Live</span>{% else %}<span class="badge bg-secondary">Hidden</span>{% endif %}</td>
       <td class="text-nowrap">
         <a href="{{ url_for('admin_edit_question', qid=q.id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+        <form method="POST" action="{{ url_for('admin_duplicate_question', qid=q.id) }}" class="d-inline">
+          <button class="btn btn-sm btn-outline-secondary">Duplicate</button>
+        </form>
         {% if q.is_released %}
           <form method="POST" action="{{ url_for('admin_unrelease_question', qid=q.id) }}" class="d-inline">
             <button class="btn btn-sm btn-outline-warning">Hide</button>
