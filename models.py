@@ -148,6 +148,40 @@ class Submission(db.Model):
     submitted_at = db.Column(db.DateTime, default=utcnow)
 
 
+class Feedback(db.Model):
+    __tablename__ = "feedback"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), nullable=True)
+    email = db.Column(db.String(160), nullable=True)
+    message = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=utcnow)
+
+
+class AboutPage(db.Model):
+    """Single-row table holding the editable About page content."""
+    __tablename__ = "about_page"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), default="Divakar")
+    bio = db.Column(db.Text, default="")
+    photo_filename = db.Column(db.String(255), nullable=True)
+    email = db.Column(db.String(160), nullable=True)
+    phone = db.Column(db.String(30), nullable=True)
+    linkedin_url = db.Column(db.String(255), nullable=True)
+    github_url = db.Column(db.String(255), nullable=True)
+    instagram_url = db.Column(db.String(255), nullable=True)
+    twitter_url = db.Column(db.String(255), nullable=True)
+    portfolio_url = db.Column(db.String(255), nullable=True)
+
+    @staticmethod
+    def get():
+        a = AboutPage.query.first()
+        if not a:
+            a = AboutPage(name="Divakar")
+            db.session.add(a)
+            db.session.commit()
+        return a
+
+
 class Draft(db.Model):
     """Autosaved in-progress code, one row per (student, question)."""
     __tablename__ = "drafts"

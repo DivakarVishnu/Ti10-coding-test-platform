@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Feedback — Ti10 Admin{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <h4 class="mb-0">Student Feedback</h4>
+  <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary btn-sm">&larr; Dashboard</a>
+</div>
+
+<div class="table-responsive">
+<table class="table table-bordered bg-white">
+<thead><tr><th>From</th><th>Message</th><th>Sent</th><th></th></tr></thead>
+  <tbody>
+    {% for f in items %}
+    <tr>
+      <td class="text-muted small">
+        {{ f.name or 'Anonymous' }}<br>
+        {% if f.email %}<span class="small">{{ f.email }}</span>{% endif %}
+      </td>
+      <td>{{ f.message }}</td>
+      <td class="text-muted small">{{ f.created_at | ist }}</td>
+      <td>
+        <form method="POST" action="{{ url_for('admin_delete_feedback', fid=f.id) }}"
+              onsubmit="return confirm('Delete this feedback entry?')">
+          <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="4" class="text-muted">No feedback yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

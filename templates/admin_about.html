@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Edit About Page — Ti10 Admin{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <h4 class="mb-0">Edit About Page</h4>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('about') }}" target="_blank" class="btn btn-outline-secondary btn-sm">View Live Page</a>
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary btn-sm">&larr; Dashboard</a>
+  </div>
+</div>
+
+<form method="POST" enctype="multipart/form-data">
+  <div class="row g-3">
+
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-body text-center">
+          <h6 class="text-muted mb-3">Photo</h6>
+          {% if about.photo_filename %}
+            <img src="{{ url_for('static', filename='uploads/about/' + about.photo_filename) }}"
+                 class="about-avatar mb-3" alt="Current photo">
+          {% else %}
+            <div class="text-muted small mb-3">No photo uploaded yet</div>
+          {% endif %}
+          <input type="file" name="photo" class="form-control" accept="image/*">
+          <small class="text-muted d-block mt-2">PNG, JPG, GIF or WEBP. Leave blank to keep the current photo.</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-8">
+      <div class="card mb-3">
+        <div class="card-body">
+          <h6 class="text-muted mb-3">Basics</h6>
+          <div class="mb-3">
+            <label class="form-label">Name</label>
+            <input type="text" name="name" class="form-control" value="{{ about.name or '' }}">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Bio</label>
+            <textarea name="bio" class="form-control" rows="5">{{ about.bio or '' }}</textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-body">
+          <h6 class="text-muted mb-3">Contact & Social Links</h6>
+          <p class="text-muted small">Leave any field blank to hide that icon on the About page.</p>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Email</label>
+              <input type="email" name="email" class="form-control" value="{{ about.email or '' }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Phone</label>
+              <input type="text" name="phone" class="form-control" value="{{ about.phone or '' }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">LinkedIn URL</label>
+              <input type="url" name="linkedin_url" class="form-control" placeholder="https://linkedin.com/in/..." value="{{ about.linkedin_url or '' }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">GitHub URL</label>
+              <input type="url" name="github_url" class="form-control" placeholder="https://github.com/..." value="{{ about.github_url or '' }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Instagram URL</label>
+              <input type="url" name="instagram_url" class="form-control" placeholder="https://instagram.com/..." value="{{ about.instagram_url or '' }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Twitter / X URL</label>
+              <input type="url" name="twitter_url" class="form-control" placeholder="https://x.com/..." value="{{ about.twitter_url or '' }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Portfolio / Website URL</label>
+              <input type="url" name="portfolio_url" class="form-control" placeholder="https://..." value="{{ about.portfolio_url or '' }}">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <button type="submit" class="btn btn-primary mt-3">Save Changes</button>
+</form>
+{% endblock %}

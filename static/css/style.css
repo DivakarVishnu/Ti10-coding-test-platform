@@ -3,8 +3,31 @@
    Dark instrument-panel aesthetic: near-black background, violet glow,
    glassmorphic cards, geometric display type. Signature element: the
    circular countdown ring used for per-question timers.
+
+   This file is organized as:
+     1. Design tokens (colors, spacing, shadows, easing, radii)
+     2. Base / typography
+     3. Navbar
+     4. Cards
+     5. Buttons
+     6. Forms
+     7. Lists / tables
+     8. Badges / alerts
+     9. Auth pages (login/register)
+    10. Timer ring
+    11. Violation banner
+    12. Dashboard stat components
+    13. Ocean / ship login scene (extended: fog, rays, reflection, aurora)
+    14. Question page + code editor shell scaffolding
+    15. Result page scaffolding
+    16. Animation / micro-interaction utilities
+    17. Accessibility
+    18. Mobile
    ========================================================================== */
+
+/* ---------------------------------- 1. Design tokens ---------------------------------- */
 :root {
+  /* Color */
   --bg: #09090f;
   --bg-elevated: #0f0e1a;
   --card-bg: rgba(255, 255, 255, 0.035);
@@ -13,20 +36,68 @@
   --card-border-hover: rgba(168, 120, 255, 0.35);
   --accent: #a855f7;
   --accent-2: #7c3aed;
+  --accent-3: #c084fc;
   --accent-soft: rgba(168, 85, 247, 0.14);
   --accent-glow: rgba(168, 85, 247, 0.55);
   --text-primary: #f3f0fa;
   --text-muted: #9c93b5;
   --text-faint: #655d7d;
   --success: #34d399;
+  --success-glow: rgba(52, 211, 153, 0.5);
   --danger: #f87171;
+  --danger-glow: rgba(248, 113, 113, 0.55);
   --warning: #fbbf24;
+  --warning-glow: rgba(251, 191, 36, 0.5);
+
+  /* 8px spacing grid */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --space-5: 32px;
+  --space-6: 48px;
+  --space-7: 64px;
+  --space-8: 96px;
+
+  /* Radii */
+  --radius-sm: 8px;
   --radius: 16px;
+  --radius-lg: 22px;
+  --radius-pill: 999px;
+
+  /* Layered / premium shadows */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.25);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.28);
+  --shadow-md: 0 8px 30px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-glow-accent: 0 4px 20px rgba(168, 85, 247, 0.25), 0 0 0 1px rgba(168, 85, 247, 0.06) inset;
+  --shadow-glow-accent-lg: 0 6px 32px var(--accent-glow), 0 0 0 1px rgba(168, 85, 247, 0.1) inset;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-slow: 380ms;
+
+  /* Typography scale */
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.85rem;
+  --fs-base: 1rem;
+  --fs-lg: 1.15rem;
+  --fs-xl: 1.5rem;
+  --fs-2xl: 2rem;
+  --fs-3xl: 2.75rem;
+  --lh-tight: 1.2;
+  --lh-normal: 1.55;
+
   --font-display: 'Space Grotesk', 'Inter', sans-serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
 }
 
+/* ---------------------------------- 2. Base / typography ---------------------------------- */
 * { box-sizing: border-box; }
 
 html, body {
@@ -36,25 +107,41 @@ html, body {
   background-attachment: fixed;
   color: var(--text-primary);
   font-family: var(--font-body);
+  line-height: var(--lh-normal);
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
 }
 
 h1, h2, h3, h4, h5, h6, .navbar-brand, .display-font {
   font-family: var(--font-display);
   letter-spacing: -0.01em;
+  line-height: var(--lh-tight);
 }
+h1 { font-size: var(--fs-3xl); }
+h2 { font-size: var(--fs-2xl); }
+h3 { font-size: var(--fs-xl); }
+p { color: var(--text-primary); }
 
-a { color: var(--accent); }
-a:hover { color: #c084fc; }
+a { color: var(--accent); transition: color var(--dur-base) var(--ease-out); }
+a:hover { color: var(--accent-3); }
 
 code, pre, .font-mono, .form-control.mono { font-family: var(--font-mono); }
 
-/* ---------------------------------- Navbar ---------------------------------- */
+::selection { background: var(--accent-soft); color: #fff; }
+
+/* Custom scrollbar (webkit) — subtle, matches theme */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(168, 85, 247, 0.25); border-radius: var(--radius-pill); border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background: rgba(168, 85, 247, 0.45); background-clip: padding-box; }
+
+/* ---------------------------------- 3. Navbar ---------------------------------- */
 .navbar.bg-dark {
   background: rgba(10, 9, 18, 0.75) !important;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--card-border);
+  transition: border-color var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out);
 }
 .navbar-brand {
   font-weight: 700;
@@ -65,11 +152,8 @@ code, pre, .font-mono, .form-control.mono { font-family: var(--font-mono); }
   color: transparent;
   letter-spacing: 0.01em;
 }
-.navbar-brand::before {
-  content: '';
-}
 
-/* ---------------------------------- Cards ---------------------------------- */
+/* ---------------------------------- 4. Cards (premium: layered shadow, hover lift, glow border) ---------------------------------- */
 .card {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
@@ -77,48 +161,153 @@ code, pre, .font-mono, .form-control.mono { font-family: var(--font-mono); }
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   color: var(--text-primary);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
-  transition: border-color 0.2s ease, transform 0.15s ease;
+  box-shadow: var(--shadow-md);
+  transition: border-color var(--dur-base) var(--ease-out),
+              transform var(--dur-base) var(--ease-out),
+              box-shadow var(--dur-base) var(--ease-out);
+  position: relative;
 }
 .card:hover { border-color: var(--card-border-hover); }
 .card-body { padding: 1.5rem; }
 .card-title { font-family: var(--font-display); }
 .text-muted { color: var(--text-muted) !important; }
 
-/* ---------------------------------- Buttons ---------------------------------- */
-.btn { border-radius: 10px; font-weight: 600; padding: 0.55rem 1.2rem; transition: all 0.15s ease; }
+/* Opt-in: floating hover-lift card (add class="card card-float") */
+.card-float { will-change: transform; }
+.card-float:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Opt-in: gradient-border card (add class="card card-gradient-border") */
+.card-gradient-border {
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--card-bg-solid), var(--card-bg-solid)) padding-box,
+    linear-gradient(135deg, var(--accent), var(--accent-2), transparent 70%) border-box;
+}
+.card-gradient-border:hover {
+  background:
+    linear-gradient(var(--card-bg-solid), var(--card-bg-solid)) padding-box,
+    linear-gradient(135deg, var(--accent-3), var(--accent), var(--accent-2)) border-box;
+}
+
+/* Opt-in: entrance animation for cards appearing on page load (stagger with --delay) */
+.card-entrance {
+  animation: cardEntrance var(--dur-slow) var(--ease-out) both;
+  animation-delay: var(--delay, 0ms);
+}
+@keyframes cardEntrance {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ---------------------------------- 5. Buttons (premium: glossy sheen, shine hover, loading/disabled) ---------------------------------- */
+.btn {
+  border-radius: 10px;
+  font-weight: 600;
+  padding: 0.55rem 1.2rem;
+  transition: transform var(--dur-fast) var(--ease-out),
+              box-shadow var(--dur-base) var(--ease-out),
+              background var(--dur-base) var(--ease-out),
+              opacity var(--dur-base) var(--ease-out);
+  position: relative;
+  overflow: hidden;
+}
+.btn:active:not(:disabled) { transform: scale(0.97); }
+.btn:disabled, .btn.disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
 .btn-primary, .btn-dark {
   background: linear-gradient(135deg, var(--accent), var(--accent-2));
   border: none;
   color: #fff;
-  box-shadow: 0 4px 20px rgba(168, 85, 247, 0.25);
+  box-shadow: var(--shadow-glow-accent);
 }
 .btn-primary:hover, .btn-dark:hover {
   background: linear-gradient(135deg, #b968f8, #8b4ceb);
-  box-shadow: 0 6px 28px var(--accent-glow);
+  box-shadow: var(--shadow-glow-accent-lg);
   transform: translateY(-1px);
 }
+
+/* Glossy shine sweep on hover — Linear-style */
+.btn-primary::before, .btn-dark::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -75%;
+  width: 50%; height: 100%;
+  background: linear-gradient(120deg, transparent, rgba(255,255,255,0.35), transparent);
+  transform: skewX(-20deg);
+  transition: left var(--dur-slow) var(--ease-out);
+  pointer-events: none;
+}
+.btn-primary:hover::before, .btn-dark:hover::before { left: 125%; }
+
 .btn-success {
   background: linear-gradient(135deg, #34d399, #10b981);
   border: none;
+  color: #06281c;
   box-shadow: 0 4px 18px rgba(52, 211, 153, 0.25);
 }
 .btn-success:hover { box-shadow: 0 6px 24px rgba(52, 211, 153, 0.4); transform: translateY(-1px); }
+
 .btn-outline-primary { border: 1px solid var(--accent); color: var(--accent); background: transparent; }
-.btn-outline-primary:hover { background: var(--accent-soft); color: #fff; border-color: var(--accent); }
+.btn-outline-primary:hover { background: var(--accent-soft); color: #fff; border-color: var(--accent); transform: translateY(-1px); }
 .btn-outline-secondary { border: 1px solid var(--card-border); color: var(--text-muted); background: transparent; }
-.btn-outline-secondary:hover { background: rgba(255,255,255,0.05); color: var(--text-primary); border-color: var(--card-border-hover); }
+.btn-outline-secondary:hover { background: rgba(255,255,255,0.05); color: var(--text-primary); border-color: var(--card-border-hover); transform: translateY(-1px); }
 .btn-outline-light { border: 1px solid rgba(255,255,255,0.25); color: var(--text-primary); }
 .btn-outline-light:hover { background: rgba(255,255,255,0.08); }
 .btn-outline-danger { border: 1px solid var(--danger); color: var(--danger); background: transparent; }
-.btn-outline-danger:hover { background: rgba(248, 113, 113, 0.12); }
+.btn-outline-danger:hover { background: rgba(248, 113, 113, 0.12); transform: translateY(-1px); }
+.btn-outline-warning { border: 1px solid var(--warning); color: var(--warning); background: transparent; }
+.btn-outline-warning:hover { background: rgba(251, 191, 36, 0.12); transform: translateY(-1px); }
 
-/* ---------------------------------- Forms ---------------------------------- */
+/* New: ghost button (borderless, minimal) */
+.btn-ghost { background: transparent; border: 1px solid transparent; color: var(--text-muted); }
+.btn-ghost:hover { background: rgba(255,255,255,0.06); color: var(--text-primary); }
+
+/* New: danger (solid, for destructive confirm actions) */
+.btn-danger {
+  background: linear-gradient(135deg, #f87171, #dc2626);
+  border: none; color: #fff;
+  box-shadow: 0 4px 18px rgba(248, 113, 113, 0.25);
+}
+.btn-danger:hover { box-shadow: 0 6px 24px rgba(248, 113, 113, 0.4); transform: translateY(-1px); }
+
+/* New: loading state — add class="btn-loading" + keep button text (it's visually hidden, spinner shown) */
+.btn-loading { color: transparent !important; pointer-events: none; }
+.btn-loading::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 16px; height: 16px;
+  margin: -8px 0 0 -8px;
+  border: 2px solid rgba(255,255,255,0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: btnSpin 0.7s linear infinite;
+}
+@keyframes btnSpin { to { transform: rotate(360deg); } }
+
+/* Ripple (click feedback) — pair with a tiny JS snippet that appends .ripple-effect on click */
+.btn .ripple-effect {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.45);
+  transform: scale(0);
+  animation: rippleAnim 0.55s var(--ease-out);
+  pointer-events: none;
+}
+@keyframes rippleAnim { to { transform: scale(3); opacity: 0; } }
+
+/* ---------------------------------- 6. Forms (premium: focus glow, validation states, floating labels) ---------------------------------- */
 .form-control, .form-select {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--card-border);
   color: var(--text-primary);
   border-radius: 10px;
+  transition: border-color var(--dur-base) var(--ease-out),
+              box-shadow var(--dur-base) var(--ease-out),
+              background var(--dur-base) var(--ease-out);
 }
 .form-control:focus, .form-select:focus {
   background: rgba(255, 255, 255, 0.06);
@@ -128,26 +317,57 @@ code, pre, .font-mono, .form-control.mono { font-family: var(--font-mono); }
 }
 .form-control::placeholder { color: var(--text-faint); }
 .form-label { color: var(--text-muted); font-weight: 500; font-size: 0.9rem; }
+
+textarea.form-control { resize: vertical; min-height: 90px; }
+
 .form-check-input {
   background-color: rgba(255,255,255,0.06);
   border: 1px solid var(--card-border);
+  transition: all var(--dur-fast) var(--ease-out);
 }
 .form-check-input:checked {
   background-color: var(--accent);
   border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
+.form-check-input:focus-visible { box-shadow: 0 0 0 3px var(--accent-soft); }
 
-/* ---------------------------------- Lists / tables ---------------------------------- */
+/* Validation states (Bootstrap's is-valid/is-invalid convention, restyled dark) */
+.form-control.is-invalid, .form-select.is-invalid { border-color: var(--danger); }
+.form-control.is-invalid:focus { box-shadow: 0 0 0 3px rgba(248,113,113,0.18); }
+.invalid-feedback { color: var(--danger); font-size: var(--fs-xs); }
+.form-control.is-valid, .form-select.is-valid { border-color: var(--success); }
+.form-control.is-valid:focus { box-shadow: 0 0 0 3px rgba(52,211,153,0.18); }
+.valid-feedback { color: var(--success); font-size: var(--fs-xs); }
+
+/* Search box (icon + input, used in toolbars) */
+.search-input-wrap { position: relative; }
+.search-input-wrap .search-icon {
+  position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%);
+  color: var(--text-faint); pointer-events: none;
+}
+.search-input-wrap .form-control { padding-left: 2.1rem; }
+
+/* Floating label, dark-themed (works with Bootstrap's .form-floating markup) */
+.form-floating > .form-control,
+.form-floating > .form-select { background: rgba(255,255,255,0.04); }
+.form-floating > label { color: var(--text-faint); }
+.form-floating > .form-control:focus ~ label,
+.form-floating > .form-control:not(:placeholder-shown) ~ label { color: var(--accent); }
+
+/* ---------------------------------- 7. Lists / tables (premium: sticky header, row hover, sort icons) ---------------------------------- */
 .list-group-item {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   color: var(--text-primary);
   margin-bottom: 8px;
   border-radius: 12px !important;
+  transition: background var(--dur-base) var(--ease-out), border-color var(--dur-base) var(--ease-out), transform var(--dur-fast) var(--ease-out);
 }
 .list-group-item-action:hover {
   background: rgba(168, 85, 247, 0.08);
   border-color: var(--card-border-hover);
+  transform: translateX(2px);
 }
 .table {
   color: var(--text-primary);
@@ -157,14 +377,66 @@ code, pre, .font-mono, .form-control.mono { font-family: var(--font-mono); }
 .table.bg-white { background: var(--card-bg-solid) !important; border-radius: var(--radius); overflow: hidden; }
 .table thead { color: var(--text-muted); font-family: var(--font-display); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; }
 .table td, .table th { border-color: var(--card-border) !important; vertical-align: middle; }
+.table tbody tr { transition: background var(--dur-fast) var(--ease-out); }
+.table tbody tr:hover { background: rgba(168, 85, 247, 0.05); }
 
-/* ---------------------------------- Badges / alerts ---------------------------------- */
-.badge { font-weight: 600; padding: 0.4em 0.75em; border-radius: 8px; }
+/* Opt-in: sticky header (add class="table-sticky-head" to the wrapping scroll container) */
+.table-sticky-head thead th {
+  position: sticky; top: 0; z-index: 2;
+  background: var(--card-bg-solid);
+}
+
+/* Opt-in: zebra striping (add class="table-striped-ti10" to <table>) */
+.table-striped-ti10 tbody tr:nth-child(odd) { background: rgba(255,255,255,0.015); }
+
+/* Opt-in: sortable column header (add class="th-sortable", toggle "sort-asc"/"sort-desc" via JS) */
+.th-sortable { cursor: pointer; user-select: none; }
+.th-sortable::after { content: '⇅'; opacity: 0.35; margin-left: 6px; font-size: 0.8em; }
+.th-sortable.sort-asc::after { content: '↑'; opacity: 1; color: var(--accent); }
+.th-sortable.sort-desc::after { content: '↓'; opacity: 1; color: var(--accent); }
+
+/* ---------------------------------- 8. Badges / alerts (premium: pills, tags, progress chips) ---------------------------------- */
+.badge { font-weight: 600; padding: 0.4em 0.75em; border-radius: 8px; transition: transform var(--dur-fast) var(--ease-out); }
 .bg-success { background: rgba(52, 211, 153, 0.18) !important; color: var(--success) !important; border: 1px solid rgba(52, 211, 153, 0.3); }
 .bg-danger { background: rgba(248, 113, 113, 0.18) !important; color: var(--danger) !important; border: 1px solid rgba(248, 113, 113, 0.3); }
 .bg-secondary { background: rgba(255,255,255,0.08) !important; color: var(--text-muted) !important; }
 .bg-info { background: var(--accent-soft) !important; color: #d8b4fe !important; border: 1px solid rgba(168,85,247,0.3); }
 .bg-warning { background: rgba(251, 191, 36, 0.18) !important; color: var(--warning) !important; border: 1px solid rgba(251,191,36,0.3); }
+
+/* New: status pill (fully rounded, dot indicator) */
+.status-pill {
+  display: inline-flex; align-items: center; gap: 0.4em;
+  padding: 0.32em 0.85em; border-radius: var(--radius-pill);
+  font-size: var(--fs-xs); font-weight: 600;
+}
+.status-pill .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; box-shadow: 0 0 6px currentColor; }
+
+/* New: tag (small, square-ish, for topics like "Arrays", "DP") */
+.tag {
+  display: inline-block; padding: 0.25em 0.65em; border-radius: 6px;
+  font-size: var(--fs-xs); font-weight: 500;
+  background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--card-border);
+}
+
+/* New: difficulty badges (question page) */
+.badge-difficulty-easy { background: rgba(52,211,153,0.15); color: var(--success); border: 1px solid rgba(52,211,153,0.3); }
+.badge-difficulty-medium { background: rgba(251,191,36,0.15); color: var(--warning); border: 1px solid rgba(251,191,36,0.3); }
+.badge-difficulty-hard { background: rgba(248,113,113,0.15); color: var(--danger); border: 1px solid rgba(248,113,113,0.3); }
+
+/* New: progress chip (small pill with a fill bar inside, e.g. "3/5 passed") */
+.progress-chip {
+  position: relative; overflow: hidden;
+  display: inline-block; min-width: 90px; padding: 0.3em 0.8em;
+  border-radius: var(--radius-pill); font-size: var(--fs-xs); font-weight: 600;
+  background: rgba(255,255,255,0.05); border: 1px solid var(--card-border);
+}
+.progress-chip .fill {
+  position: absolute; inset: 0; z-index: 0;
+  background: linear-gradient(90deg, var(--accent-soft), transparent);
+  width: var(--pct, 0%);
+  transition: width var(--dur-slow) var(--ease-out);
+}
+.progress-chip span { position: relative; z-index: 1; }
 
 .alert { border-radius: 12px; border: 1px solid; backdrop-filter: blur(8px); }
 .alert-danger, .alert-error { background: rgba(248, 113, 113, 0.1); border-color: rgba(248, 113, 113, 0.3); color: #fecaca; }
@@ -185,8 +457,8 @@ pre {
   color: #d8d3e8;
 }
 
-/* ---------------------------------- Auth pages ---------------------------------- */
-.auth-wrapper { min-height: calc(100vh - 90px); display: flex; align-items: center; }
+/* ---------------------------------- 9. Auth pages ---------------------------------- */
+.auth-wrapper { min-height: calc(100vh - 90px); display: flex; align-items: center; position: relative; z-index: 1; }
 .auth-card { position: relative; overflow: hidden; }
 .auth-card::before {
   content: '';
@@ -206,16 +478,17 @@ pre {
   background-clip: text;
   color: transparent;
 }
+.tagline { letter-spacing: 0.02em; font-style: italic; }
 
-/* ---------------------------------- Timer ring (signature element) ---------------------------------- */
+/* ---------------------------------- 10. Timer ring (signature element, premium urgency states) ---------------------------------- */
 .timer-ring-wrap { display: flex; align-items: center; gap: 12px; }
 .timer-ring { position: relative; width: 64px; height: 64px; flex-shrink: 0; }
 .timer-ring svg { transform: rotate(-90deg); width: 100%; height: 100%; }
 .timer-ring circle { fill: none; stroke-width: 6; }
 .timer-ring .ring-bg { stroke: rgba(255,255,255,0.08); }
 .timer-ring .ring-fg { stroke: var(--accent); stroke-linecap: round; transition: stroke-dashoffset 1s linear, stroke 0.3s ease; filter: drop-shadow(0 0 6px var(--accent-glow)); }
-.timer-ring.warning .ring-fg { stroke: var(--warning); filter: drop-shadow(0 0 6px rgba(251,191,36,0.6)); }
-.timer-ring.danger .ring-fg { stroke: var(--danger); filter: drop-shadow(0 0 6px rgba(248,113,113,0.6)); }
+.timer-ring.warning .ring-fg { stroke: var(--warning); filter: drop-shadow(0 0 6px var(--warning-glow)); }
+.timer-ring.danger .ring-fg { stroke: var(--danger); filter: drop-shadow(0 0 8px var(--danger-glow)); }
 .timer-ring-label {
   position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center;
@@ -224,7 +497,25 @@ pre {
 .timer-text { font-family: var(--font-mono); font-size: 0.95rem; color: var(--text-muted); }
 .timer-text .big { font-size: 1.1rem; color: var(--text-primary); font-weight: 700; }
 
-/* ---------------------------------- Violation banner ---------------------------------- */
+/* New: last-30-seconds urgency — JS should add class="critical" to .timer-ring at ≤30s */
+.timer-ring.critical { animation: timerHeartbeat 1s ease-in-out infinite; }
+.timer-ring.critical .ring-fg { animation: timerPulseGlow 1s ease-in-out infinite; }
+@keyframes timerHeartbeat {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+@keyframes timerPulseGlow {
+  0%, 100% { filter: drop-shadow(0 0 8px var(--danger-glow)); }
+  50% { filter: drop-shadow(0 0 16px var(--danger-glow)); }
+}
+.timer-ring-wrap.critical .timer-text .big { color: var(--danger); animation: timerShake 0.4s ease-in-out; }
+@keyframes timerShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+/* ---------------------------------- 11. Violation banner ---------------------------------- */
 .violation-banner {
   position: fixed; top: 0; left: 0; right: 0; z-index: 2000;
   background: linear-gradient(90deg, #7f1d1d, #991b1b);
@@ -236,22 +527,56 @@ pre {
   box-shadow: 0 4px 20px rgba(0,0,0,0.4);
 }
 
-/* ---------------------------------- Misc ---------------------------------- */
+/* ---------------------------------- 12. Dashboard stat components ---------------------------------- */
 .stat-tile { text-align: center; }
 .stat-tile h3 { font-family: var(--font-mono); font-size: 2rem; color: var(--accent); }
-.q-image { max-width: 100%; border-radius: 12px; border: 1px solid var(--card-border); margin-bottom: 1rem; }
 .glow-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; box-shadow: 0 0 8px currentColor; }
 
-/* ---------------------------------- Mobile ---------------------------------- */
-@media (max-width: 768px) {
-  .card-body { padding: 1.1rem; }
-  #editor { height: 340px !important; }
-  .navbar-brand { font-size: 1.1rem; }
-  .timer-ring { width: 48px; height: 48px; }
+/* New: trend arrow (pair with a number, e.g. "+12%") */
+.trend { display: inline-flex; align-items: center; gap: 0.25em; font-size: var(--fs-sm); font-weight: 600; }
+.trend-up { color: var(--success); }
+.trend-up::before { content: '▲'; font-size: 0.7em; }
+.trend-down { color: var(--danger); }
+.trend-down::before { content: '▼'; font-size: 0.7em; }
+
+/* New: linear progress bar */
+.progress-bar-ti10 { height: 8px; border-radius: var(--radius-pill); background: rgba(255,255,255,0.06); overflow: hidden; }
+.progress-bar-ti10 .fill {
+  height: 100%; border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  width: var(--pct, 0%);
+  transition: width var(--dur-slow) var(--ease-out);
+  box-shadow: 0 0 8px var(--accent-glow);
 }
 
-/* ---------------------------------- Ocean / ship login scene ---------------------------------- */
-/* ---------------------------------- Ocean / ship login scene ---------------------------------- */
+/* New: circular stat ring (generalized version of the timer ring, for scores/percentiles) */
+.stat-ring { position: relative; width: 88px; height: 88px; }
+.stat-ring svg { transform: rotate(-90deg); width: 100%; height: 100%; }
+.stat-ring circle { fill: none; stroke-width: 7; }
+.stat-ring .ring-bg { stroke: rgba(255,255,255,0.08); }
+.stat-ring .ring-fg { stroke: var(--accent); stroke-linecap: round; filter: drop-shadow(0 0 6px var(--accent-glow)); transition: stroke-dashoffset var(--dur-slow) var(--ease-out); }
+.stat-ring-label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-weight: 700; font-size: var(--fs-lg); }
+
+/* New: animated-counter target (actual counting-up requires a tiny JS
+   requestAnimationFrame loop that writes textContent — this class just
+   gives the number a settle-in animation once JS updates it) */
+.stat-counter { display: inline-block; animation: counterSettle var(--dur-slow) var(--ease-spring); }
+@keyframes counterSettle { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+/* New: mini sparkline chart container (draw actual line via inline SVG/JS) */
+.mini-chart { width: 100%; height: 36px; }
+.mini-chart svg path { fill: none; stroke: var(--accent); stroke-width: 2; }
+.mini-chart svg .chart-fill { fill: url(#miniChartGradient); stroke: none; opacity: 0.25; }
+
+/* New: heat-map cell grid (e.g. activity calendar) */
+.heatmap-grid { display: grid; grid-template-columns: repeat(auto-fill, 12px); gap: 3px; }
+.heatmap-cell { width: 12px; height: 12px; border-radius: 3px; background: rgba(255,255,255,0.06); }
+.heatmap-cell[data-level="1"] { background: rgba(168,85,247,0.25); }
+.heatmap-cell[data-level="2"] { background: rgba(168,85,247,0.45); }
+.heatmap-cell[data-level="3"] { background: rgba(168,85,247,0.7); }
+.heatmap-cell[data-level="4"] { background: var(--accent); box-shadow: 0 0 4px var(--accent-glow); }
+
+/* ---------------------------------- 13. Ocean / ship login scene ---------------------------------- */
 .ocean-scene {
   position: relative;
   height: 240px;
@@ -263,7 +588,6 @@ pre {
   cursor: crosshair;
 }
 
-/* Moon glow, top-right */
 .ocean-moon {
   position: absolute;
   top: 18px; right: 12%;
@@ -274,7 +598,39 @@ pre {
   opacity: 0.9;
 }
 
-/* Twinkling stars */
+/* New: light rays emanating from the moon */
+.ocean-rays {
+  position: absolute;
+  top: -20px; right: 4%;
+  width: 220px; height: 220px;
+  background: conic-gradient(from 200deg at 50% 30%,
+    transparent 0deg, rgba(233,213,255,0.10) 4deg, transparent 10deg,
+    transparent 30deg, rgba(233,213,255,0.07) 34deg, transparent 42deg,
+    transparent 70deg, rgba(233,213,255,0.09) 75deg, transparent 82deg);
+  opacity: 0.7;
+  animation: raysDrift 24s linear infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+@keyframes raysDrift { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* New: fog layer near the waterline */
+.ocean-fog {
+  position: absolute;
+  left: -10%; right: -10%; bottom: 20px;
+  height: 70px;
+  background: linear-gradient(180deg, transparent, rgba(233,213,255,0.06) 60%, transparent);
+  filter: blur(6px);
+  animation: fogDrift 40s linear infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+@keyframes fogDrift {
+  0% { transform: translateX(0); }
+  50% { transform: translateX(3%); }
+  100% { transform: translateX(0); }
+}
+
 .ocean-stars { position: absolute; inset: 0; z-index: 1; }
 .star {
   position: absolute;
@@ -289,7 +645,6 @@ pre {
   50% { opacity: 0.9; transform: scale(1.6); }
 }
 
-/* Drifting clouds (horizon depth) */
 .ocean-clouds { position: absolute; inset: 0; z-index: 1; overflow: hidden; }
 .cloud {
   position: absolute;
@@ -318,7 +673,25 @@ pre {
   100% { left: 115%; }
 }
 
-/* Seagulls */
+/* New: aurora ribbon across the upper sky */
+.ocean-aurora {
+  position: absolute;
+  top: -10%; left: -10%;
+  width: 120%; height: 60%;
+  background: linear-gradient(100deg,
+    transparent 0%, rgba(168,85,247,0.10) 20%, rgba(216,180,254,0.14) 35%,
+    rgba(124,58,237,0.08) 55%, transparent 75%);
+  filter: blur(10px);
+  mix-blend-mode: screen;
+  animation: auroraWave 18s ease-in-out infinite alternate;
+  pointer-events: none;
+  z-index: 1;
+}
+@keyframes auroraWave {
+  0% { transform: translateX(-4%) scaleY(1); opacity: 0.6; }
+  100% { transform: translateX(4%) scaleY(1.12); opacity: 0.9; }
+}
+
 .ocean-birds { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
 .bird {
   position: absolute;
@@ -336,7 +709,6 @@ pre {
   50% { transform: translateY(-5px); }
 }
 
-/* Lighthouse, left edge */
 .lighthouse {
   position: absolute;
   left: 4%;
@@ -361,7 +733,6 @@ pre {
   50% { opacity: 1; box-shadow: 0 0 12px 4px #fde68a; }
 }
 
-/* Ship (position is driven by JS: autonomous sail drift + mouse parallax combined) */
 .ship-wrap {
   position: absolute;
   left: 50%;
@@ -378,8 +749,20 @@ pre {
 }
 .ship-wrap svg { width: 92px; height: auto; display: block; }
 
-/* Wake ripple trailing the ship — outer div positioned by JS (tracks ship),
-   inner div handles the pulse animation so the two don't fight over `transform`. */
+/* New: water reflection of the ship (mirrored, blurred, faded) */
+.ship-reflection {
+  position: absolute;
+  left: 50%; top: 118px;
+  transform: translateX(-50%) scaleY(-1);
+  z-index: 3;
+  opacity: 0.18;
+  filter: blur(1.5px);
+  -webkit-mask-image: linear-gradient(180deg, rgba(0,0,0,0.6), transparent 80%);
+  mask-image: linear-gradient(180deg, rgba(0,0,0,0.6), transparent 80%);
+  pointer-events: none;
+}
+.ship-reflection svg { width: 92px; height: auto; display: block; }
+
 .ship-wake {
   position: absolute;
   left: 50%; top: 128px;
@@ -399,7 +782,6 @@ pre {
   50% { opacity: 0.65; transform: scaleX(1.15); }
 }
 
-/* Layered waves (SVG) */
 .wave-layer {
   position: absolute;
   left: -25%;
@@ -416,7 +798,20 @@ pre {
   100% { transform: translateX(-16.66%); }
 }
 
-/* Rising bubbles */
+/* New: subtle water surface shimmer overlay above the waves */
+.ocean-shimmer {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 60px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.04), transparent);
+  background-size: 200% 100%;
+  animation: shimmerSlide 6s linear infinite;
+  z-index: 2;
+  pointer-events: none;
+}
+@keyframes shimmerSlide {
+  0% { background-position: 0% 0; }
+  100% { background-position: 200% 0; }
+}
+
 .bubble {
   position: absolute;
   bottom: 10px;
@@ -434,7 +829,6 @@ pre {
   100% { transform: translateY(-180px) scale(1.1); opacity: 0; }
 }
 
-/* Click ripple */
 .click-ripple {
   position: absolute;
   width: 12px; height: 12px;
@@ -450,53 +844,7 @@ pre {
   100% { width: 90px; height: 90px; opacity: 0; }
 }
 
-@media (max-width: 768px) {
-  .ocean-scene { height: 180px; }
-  .ship-wrap { top: 44px; }
-  .ship-wrap svg { width: 70px; }
-  .lighthouse { display: none; }
-}
-
-/* ---------------------------------- Results panel at top ---------------------------------- */
-.results-panel-top { margin-bottom: 16px; }
-.results-panel-top:empty { display: none; }
-
-/* ---------------------------------- Bigger, LeetCode-style editor ---------------------------------- */
-.code-editor-lg { height: 78vh; min-height: 560px; }
-@media (max-width: 991px) {
-  .code-editor-lg { height: 460px; min-height: 460px; }
-}
-
-/* ---------------------------------- Submit celebration ---------------------------------- */
-.confetti-piece {
-  position: fixed;
-  top: -10px;
-  width: 8px; height: 8px;
-  z-index: 3000;
-  pointer-events: none;
-  animation: confettiFall linear forwards;
-}
-@keyframes confettiFall {
-  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-  100% { transform: translateY(105vh) rotate(720deg); opacity: 0.3; }
-}
-
-/* ---------------------------------- Results panel at top ---------------------------------- */
-.results-panel-top { margin-bottom: 16px; }
-.results-panel-top:empty { display: none; }
-
-/* ---------------------------------- Bigger, LeetCode-style editor ---------------------------------- */
-.code-editor-lg { height: 78vh; min-height: 560px; }
-@media (max-width: 991px) {
-  .code-editor-lg { height: 460px; min-height: 460px; }
-}
-
-
-
-/* ---------------------------------- Auth brand tagline ---------------------------------- */
-.tagline { letter-spacing: 0.02em; font-style: italic; }
-
-/* ---------------------------------- Full-page background waves ---------------------------------- */
+/* Full-page background waves (used on non-login pages for a consistent ambient touch) */
 .bg-waves {
   position: fixed;
   left: -25%;
@@ -512,43 +860,203 @@ pre {
 .bg-waves .wave-1 svg { height: 60px; }
 .auth-wrapper, .navbar, .container { position: relative; z-index: 1; }
 
-
-
-/* ---------------------------------- Site-wide background scene (stars + moon) ---------------------------------- */
-.site-bg-scene {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
+/* Site-wide ambient background (stars + moon), used on non-login pages */
+.site-bg-scene { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
 .site-moon {
-  position: absolute;
-  top: 6%; right: 8%;
-  width: 70px; height: 70px;
-  border-radius: 50%;
+  position: absolute; top: 6%; right: 8%; width: 70px; height: 70px; border-radius: 50%;
   background: radial-gradient(circle at 35% 35%, #f3f0fa, #d8b4fe 60%, transparent 75%);
   box-shadow: 0 0 50px 14px var(--accent-glow), 0 0 110px 40px rgba(168,85,247,0.18);
   opacity: 0.55;
 }
 .site-stars { position: absolute; inset: 0; }
 .site-star {
-  position: absolute;
-  width: 2px; height: 2px;
-  background: #fff;
-  border-radius: 50%;
-  animation: siteTwinkle 3.2s ease-in-out infinite;
-  opacity: 0.35;
+  position: absolute; width: 2px; height: 2px; background: #fff; border-radius: 50%;
+  animation: siteTwinkle 3.2s ease-in-out infinite; opacity: 0.35;
 }
-@keyframes siteTwinkle {
-  0%, 100% { opacity: 0.1; transform: scale(1); }
-  50% { opacity: 0.6; transform: scale(1.5); }
-}
+@keyframes siteTwinkle { 0%, 100% { opacity: .1; transform: scale(1); } 50% { opacity: .6; transform: scale(1.5); } }
+
 @media (max-width: 768px) {
+  .ocean-scene { height: 180px; }
+  .ship-wrap { top: 44px; }
+  .ship-wrap svg { width: 70px; }
+  .lighthouse { display: none; }
+  .ocean-rays { display: none; }
   .site-moon { width: 46px; height: 46px; top: 4%; right: 6%; }
 }
 
-/* ---------------------------------- Custom student edit/reset modal ---------------------------------- */
+/* ---------------------------------- 14. Question page + code editor shell (scaffolding) ---------------------------------- */
+.results-panel-top { margin-bottom: 16px; }
+.results-panel-top:empty { display: none; }
+
+.code-editor-lg { height: 78vh; min-height: 560px; }
+@media (max-width: 991px) {
+  .code-editor-lg { height: 460px; min-height: 460px; }
+}
+
+/* New: VS-Code-style editor shell (header + toolbar + body).
+   Wrap your existing #editor mount point inside this. */
+.code-editor-shell {
+  border-radius: var(--radius); overflow: hidden;
+  border: 1px solid var(--card-border);
+  box-shadow: var(--shadow-md);
+  background: #1e1e1e;
+}
+.code-editor-shell-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.55rem 0.9rem;
+  background: #17171f;
+  border-bottom: 1px solid var(--card-border);
+}
+.code-editor-shell-header .lang-badge {
+  font-family: var(--font-mono); font-size: var(--fs-xs);
+  padding: 0.2em 0.6em; border-radius: 6px;
+  background: var(--accent-soft); color: #d8b4fe; border: 1px solid rgba(168,85,247,0.3);
+}
+.code-editor-shell-toolbar { display: flex; gap: 0.4rem; }
+.code-editor-shell-toolbar .icon-btn {
+  width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 6px; color: var(--text-muted); background: transparent; border: none; cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+.code-editor-shell-toolbar .icon-btn:hover { background: rgba(255,255,255,0.08); color: var(--text-primary); }
+.code-editor-shell.fullscreen-active { position: fixed; inset: 0; z-index: 1900; border-radius: 0; }
+
+/* New: split-view container for editor | console (LeetCode style).
+   Actual resizing needs a small JS drag handler on .split-divider. */
+.split-view { display: flex; height: 100%; }
+.split-view .split-pane { min-width: 0; flex: 1 1 auto; overflow: auto; }
+.split-divider {
+  width: 6px; flex: 0 0 auto; cursor: col-resize;
+  background: var(--card-border);
+  transition: background var(--dur-fast) var(--ease-out);
+}
+.split-divider:hover, .split-divider.dragging { background: var(--accent); }
+@media (max-width: 991px) {
+  .split-view { flex-direction: column; }
+  .split-divider { width: 100%; height: 6px; cursor: row-resize; }
+}
+
+/* New: console/output panel */
+.console-panel {
+  background: #17171f; border-top: 1px solid var(--card-border);
+  font-family: var(--font-mono); font-size: var(--fs-sm); padding: 0.9rem;
+}
+.console-panel .console-meta { display: flex; gap: 1rem; color: var(--text-muted); font-size: var(--fs-xs); margin-bottom: 0.5rem; }
+.console-panel .console-meta strong { color: var(--text-primary); }
+
+.q-image { max-width: 100%; border-radius: 12px; border: 1px solid var(--card-border); margin-bottom: 1rem; }
+
+/* New: bookmark toggle */
+.bookmark-btn {
+  background: transparent; border: 1px solid var(--card-border); color: var(--text-muted);
+  border-radius: 8px; padding: 0.35rem 0.6rem; cursor: pointer;
+  transition: all var(--dur-fast) var(--ease-out);
+}
+.bookmark-btn:hover { border-color: var(--card-border-hover); color: var(--text-primary); }
+.bookmark-btn.active { color: var(--warning); border-color: rgba(251,191,36,0.4); background: rgba(251,191,36,0.08); }
+
+/* New: question progress dots (e.g. 3 of 10) */
+.q-progress-dots { display: flex; gap: 6px; align-items: center; }
+.q-progress-dots .qd { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.12); transition: all var(--dur-base) var(--ease-out); }
+.q-progress-dots .qd.done { background: var(--success); box-shadow: 0 0 6px var(--success-glow); }
+.q-progress-dots .qd.current { background: var(--accent); width: 20px; border-radius: var(--radius-pill); box-shadow: 0 0 6px var(--accent-glow); }
+
+/* ---------------------------------- 15. Result page (scaffolding) ---------------------------------- */
+.result-hero-ring { width: 160px; height: 160px; margin: 0 auto; }
+.result-hero-ring circle { stroke-width: 10; fill: none; }
+.result-hero-ring .ring-bg { stroke: rgba(255,255,255,0.06); }
+.result-hero-ring .ring-fg { stroke: url(#resultRingGradient); stroke-linecap: round; filter: drop-shadow(0 0 12px var(--accent-glow)); }
+
+.achievement-badge {
+  display: inline-flex; flex-direction: column; align-items: center; gap: 0.4rem;
+  padding: 1rem; border-radius: var(--radius);
+  background: var(--card-bg); border: 1px solid var(--card-border);
+  transition: transform var(--dur-base) var(--ease-spring);
+}
+.achievement-badge:hover { transform: translateY(-3px) scale(1.03); }
+.achievement-badge .icon {
+  width: 44px; height: 44px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; font-size: 1.3rem;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  box-shadow: 0 0 16px var(--accent-glow);
+}
+
+.certificate-card {
+  border: 1px solid var(--card-border-hover); border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  background: linear-gradient(135deg, rgba(168,85,247,0.08), rgba(124,58,237,0.04));
+  position: relative; overflow: hidden;
+}
+.certificate-card::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(circle at 20% 0%, rgba(168,85,247,0.12), transparent 60%);
+  pointer-events: none;
+}
+
+/* Placeholder radar chart container — draw the actual polygon via inline SVG/JS */
+.radar-chart-placeholder {
+  width: 100%; aspect-ratio: 1; max-width: 320px; margin: 0 auto;
+  border-radius: 50%;
+  background:
+    repeating-radial-gradient(circle, rgba(255,255,255,0.05) 0 1px, transparent 1px 20%);
+  border: 1px solid var(--card-border);
+}
+
+/* ---------------------------------- 16. Animation / micro-interaction utilities ---------------------------------- */
+.animate-fade-in { animation: fadeIn var(--dur-base) var(--ease-out) both; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.animate-slide-up { animation: slideUp var(--dur-base) var(--ease-out) both; }
+@keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+.animate-scale-in { animation: scaleIn var(--dur-base) var(--ease-spring) both; }
+@keyframes scaleIn { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }
+
+.animate-float { animation: floatY 3.4s ease-in-out infinite; }
+@keyframes floatY { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+
+.animate-pulse-glow { animation: pulseGlow 2s ease-in-out infinite; }
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 var(--accent-soft); }
+  50% { box-shadow: 0 0 0 8px transparent; }
+}
+
+/* Skeleton loading (shimmer) — apply to placeholder blocks while data loads */
+.skeleton {
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 37%, rgba(255,255,255,0.04) 63%);
+  background-size: 400% 100%;
+  animation: skeletonShimmer 1.4s ease infinite;
+  border-radius: 8px;
+  color: transparent !important;
+}
+@keyframes skeletonShimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Scroll-reveal — pair with an IntersectionObserver that adds .in-view */
+.scroll-reveal { opacity: 0; transform: translateY(16px); transition: opacity var(--dur-slow) var(--ease-out), transform var(--dur-slow) var(--ease-out); }
+.scroll-reveal.in-view { opacity: 1; transform: translateY(0); }
+
+/* Page transition wrapper — apply to your main content block */
+.page-transition { animation: pageIn var(--dur-slow) var(--ease-out) both; }
+@keyframes pageIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Confetti (submit celebration) */
+.confetti-piece {
+  position: fixed;
+  top: -10px;
+  width: 8px; height: 8px;
+  z-index: 3000;
+  pointer-events: none;
+  animation: confettiFall linear forwards;
+}
+@keyframes confettiFall {
+  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(105vh) rotate(720deg); opacity: 0.3; }
+}
+
+/* ---------------------------------- 17. Custom modal (student edit/reset) ---------------------------------- */
 .ti10-modal-overlay {
   display: none;
   position: fixed;
@@ -559,9 +1067,7 @@ pre {
   justify-content: center;
   padding: 1rem;
 }
-.ti10-modal-overlay.active {
-  display: flex;
-}
+.ti10-modal-overlay.active { display: flex; }
 .ti10-modal-box {
   position: relative;
   z-index: 99999;
@@ -572,37 +1078,104 @@ pre {
   max-width: 480px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  box-shadow: var(--shadow-lg);
+  animation: scaleIn var(--dur-base) var(--ease-spring) both;
 }
 .ti10-modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 1.25rem;
-  border-bottom: 1px solid var(--card-border);
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 1rem 1.25rem; border-bottom: 1px solid var(--card-border);
 }
 .ti10-modal-header h5 { margin: 0; font-size: 1.1rem; }
 .ti10-modal-close {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  font-size: 1.4rem;
-  line-height: 1;
-  cursor: pointer;
-  padding: 0 0.3rem;
+  background: none; border: none; color: var(--text-muted);
+  font-size: 1.4rem; line-height: 1; cursor: pointer; padding: 0 0.3rem;
+  transition: color var(--dur-fast) var(--ease-out);
 }
 .ti10-modal-close:hover { color: var(--text-primary); }
 .ti10-modal-body { padding: 1.25rem; }
 .ti10-modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.6rem;
-  padding: 1rem 1.25rem;
-  border-top: 1px solid var(--card-border);
+  display: flex; justify-content: flex-end; gap: 0.6rem;
+  padding: 1rem 1.25rem; border-top: 1px solid var(--card-border);
 }
-.ti10-modal-box .form-control {
-  position: relative;
-  z-index: 1;
-  pointer-events: auto;
-  caret-color: #ffffff;
+.ti10-modal-box .form-control { position: relative; z-index: 1; pointer-events: auto; caret-color: #ffffff; }
+
+/* ---------------------------------- 18. About page avatar ---------------------------------- */
+.about-avatar {
+  width: 96px; height: 96px; border-radius: 50%; object-fit: cover;
+  border: 2px solid var(--card-border-hover);
+  box-shadow: 0 0 24px var(--accent-glow);
+  flex-shrink: 0;
+}
+
+/* ---------------------------------- 19. Accessibility ---------------------------------- */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.btn:focus-visible, .form-control:focus-visible, .form-select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --card-border: rgba(168, 120, 255, 0.4);
+    --text-muted: #b9b0d1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------------------------------- 20. Mobile ---------------------------------- */
+@media (max-width: 768px) {
+  .card-body { padding: 1.1rem; }
+  #editor { height: 340px !important; }
+  .navbar-brand { font-size: 1.1rem; }
+  .timer-ring { width: 48px; height: 48px; }
+  .stat-ring { width: 68px; height: 68px; }
+}
+
+/* ---------------------------------- Social links row ---------------------------------- */
+.social-links { display: flex; flex-wrap: wrap; gap: 10px; }
+.social-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--card-border);
+  color: var(--text-muted);
+  transition: all 0.15s ease;
+}
+.social-link svg { width: 18px; height: 18px; }
+.social-link:hover {
+  color: #fff;
+  border-color: var(--card-border-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(168, 85, 247, 0.25);
+}
+.social-linkedin:hover { background: #0a66c2; border-color: #0a66c2; }
+.social-github:hover { background: #24292e; border-color: #24292e; }
+.social-instagram:hover { background: linear-gradient(135deg, #f58529, #dd2a7b, #8134af); border-color: transparent; }
+.social-twitter:hover { background: #000; border-color: #000; }
+.social-portfolio:hover { background: var(--accent); border-color: var(--accent); }
+.social-email:hover { background: #ea4335; border-color: #ea4335; }
+.social-phone:hover { background: var(--success); border-color: var(--success); }
+
+.about-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--card-border-hover);
+  flex-shrink: 0;
 }

@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}About — Ti10{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+
+    <div class="card mb-4">
+      <div class="card-body text-center">
+        <div class="brand-mark mb-2">Ti10</div>
+        <p class="text-muted">Making Waves — a coding assessment platform built for real exams.</p>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-body">
+        <h4 class="mb-3">⚓ About Titan</h4>
+        <p>
+          Every student who logs in sees the same small ship crossing a quiet purple sea —
+          that's <strong>Titan</strong>, Ti10's mascot. The idea is simple: a coding test can feel
+          like open water — a little uncertain, sometimes a little scary — but with the right
+          vessel, you make it across. Titan sails past the same moon and stars on every page,
+          a quiet reminder that the platform is steady even when the exam itself is intense.
+        </p>
+        <p class="text-muted small mb-0">
+          The name "Ti10" nods to that same idea — small, sturdy, and built to carry a class
+          safely through a timed test without drama.
+        </p>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-body">
+        <h4 class="mb-3">👋 About Me</h4>
+        <div class="d-flex flex-column flex-sm-row align-items-center align-items-sm-start gap-3">
+          {% if about.photo_filename %}
+            <img src="{{ url_for('static', filename='uploads/about/' + about.photo_filename) }}"
+                 alt="Photo of {{ about.name or 'the creator' }}"
+                 class="about-avatar">
+          {% else %}
+            <img src="{{ url_for('static', filename='images/me.jpg') }}"
+                 alt="Photo of the creator"
+                 class="about-avatar">
+          {% endif %}
+          <div class="flex-grow-1">
+            <p style="white-space: pre-line;">{{ about.bio }}</p>
+
+            {% if about.email or about.phone or about.linkedin_url or about.github_url or about.instagram_url or about.twitter_url or about.portfolio_url %}
+            <div class="social-links mt-3">
+              {% if about.linkedin_url %}
+              <a href="{{ about.linkedin_url }}" target="_blank" rel="noopener" class="social-link social-linkedin" title="LinkedIn">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14zM8.34 18.34V10.13H5.67v8.21h2.67zM7 9.05a1.55 1.55 0 1 0 0-3.1 1.55 1.55 0 0 0 0 3.1zm11.34 9.29v-4.5c0-2.41-1.29-3.53-3-3.53a2.59 2.59 0 0 0-2.35 1.3h-.03v-1.11h-2.57c.03.72 0 8.21 0 8.21h2.67v-4.59c0-.24.02-.49.09-.66.2-.49.65-1 1.4-1 .99 0 1.39.75 1.39 1.86v4.39h2.67z"/></svg>
+              </a>
+              {% endif %}
+              {% if about.github_url %}
+              <a href="{{ about.github_url }}" target="_blank" rel="noopener" class="social-link social-github" title="GitHub">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.53 9.53 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.35 4.68-4.58 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2z"/></svg>
+              </a>
+              {% endif %}
+              {% if about.instagram_url %}
+              <a href="{{ about.instagram_url }}" target="_blank" rel="noopener" class="social-link social-instagram" title="Instagram">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c2.72 0 3.06.01 4.12.06 1.06.05 1.79.22 2.43.47.66.26 1.21.6 1.76 1.15.5.5.9 1.1 1.15 1.76.25.64.42 1.37.47 2.43.05 1.06.06 1.4.06 4.12s-.01 3.06-.06 4.12c-.05 1.06-.22 1.79-.47 2.43a4.9 4.9 0 0 1-1.15 1.76 4.9 4.9 0 0 1-1.76 1.15c-.64.25-1.37.42-2.43.47-1.06.05-1.4.06-4.12.06s-3.06-.01-4.12-.06c-1.06-.05-1.79-.22-2.43-.47a4.9 4.9 0 0 1-1.76-1.15 4.9 4.9 0 0 1-1.15-1.76c-.25-.64-.42-1.37-.47-2.43C2.01 15.06 2 14.72 2 12s.01-3.06.06-4.12c.05-1.06.22-1.79.47-2.43.26-.66.6-1.21 1.15-1.76a4.9 4.9 0 0 1 1.76-1.15c.64-.25 1.37-.42 2.43-.47C8.94 2.01 9.28 2 12 2zm0 1.8c-2.67 0-2.99.01-4.04.06-.87.04-1.34.18-1.65.3-.42.16-.71.36-1.02.67-.31.31-.51.6-.67 1.02-.12.31-.26.78-.3 1.65C4.27 8.75 4.26 9.07 4.26 12s.01 3.25.06 4.3c.04.87.18 1.34.3 1.65.16.42.36.71.67 1.02.31.31.6.51 1.02.67.31.12.78.26 1.65.3 1.05.05 1.37.06 4.04.06s2.99-.01 4.04-.06c.87-.04 1.34-.18 1.65-.3.42-.16.71-.36 1.02-.67.31-.31.51-.6.67-1.02.12-.31.26-.78.3-1.65.05-1.05.06-1.37.06-4.3s-.01-3.25-.06-4.3c-.04-.87-.18-1.34-.3-1.65a2.7 2.7 0 0 0-.67-1.02 2.7 2.7 0 0 0-1.02-.67c-.31-.12-.78-.26-1.65-.3-1.05-.05-1.37-.06-4.04-.06zm0 4.6a3.6 3.6 0 1 1 0 7.2 3.6 3.6 0 0 1 0-7.2zm0 1.8a1.8 1.8 0 1 0 0 3.6 1.8 1.8 0 0 0 0-3.6zm4.6-2a.85.85 0 1 1 0 1.7.85.85 0 0 1 0-1.7z"/></svg>
+              </a>
+              {% endif %}
+              {% if about.twitter_url %}
+              <a href="{{ about.twitter_url }}" target="_blank" rel="noopener" class="social-link social-twitter" title="Twitter / X">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 3H21l-6.55 7.49L22 21h-6.13l-4.8-6.28L5.55 21H3.43l7.03-8.03L2.8 3h6.28l4.34 5.74L18.9 3zm-1.07 16.2h1.17L7.28 4.73H6.02L17.83 19.2z"/></svg>
+              </a>
+              {% endif %}
+              {% if about.portfolio_url %}
+              <a href="{{ about.portfolio_url }}" target="_blank" rel="noopener" class="social-link social-portfolio" title="Website">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm7.93 9h-3.05a15.4 15.4 0 0 0-1.14-5.37A8.03 8.03 0 0 1 19.93 11zM12 4.06c.85 1.1 1.87 3 2.17 6.94H9.83c.3-3.94 1.32-5.84 2.17-6.94zM9.83 13h4.34c-.3 3.94-1.32 5.84-2.17 6.94-.85-1.1-1.87-3-2.17-6.94zM8.26 5.63A15.4 15.4 0 0 0 7.12 11H4.07a8.03 8.03 0 0 1 4.19-5.37zM4.07 13h3.05a15.4 15.4 0 0 0 1.14 5.37A8.03 8.03 0 0 1 4.07 13zm11.68 5.37A15.4 15.4 0 0 0 16.89 13h3.04a8.03 8.03 0 0 1-4.18 5.37z"/></svg>
+              </a>
+              {% endif %}
+              {% if about.email %}
+              <a href="mailto:{{ about.email }}" class="social-link social-email" title="Email">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z"/></svg>
+              </a>
+              {% endif %}
+              {% if about.phone %}
+              <a href="tel:{{ about.phone }}" class="social-link social-phone" title="Call">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8a15.9 15.9 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1.02-.24 11.4 11.4 0 0 0 3.58.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.24.2 2.45.57 3.58a1 1 0 0 1-.25 1.02L6.6 10.8z"/></svg>
+              </a>
+              {% endif %}
+            </div>
+            {% endif %}
+
+            <p class="text-muted small mb-0 mt-3">
+              Built with Flask, PostgreSQL, and Judge0. Feedback and bug reports are always welcome —
+              use the form below.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-body">
+        <h4 class="mb-3">💬 Send Feedback</h4>
+        <form method="POST" action="{{ url_for('submit_feedback') }}">
+          {% if not session.get('student_id') %}
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Your Name (optional)</label>
+              <input type="text" name="name" class="form-control">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Your Email (optional)</label>
+              <input type="email" name="email" class="form-control">
+            </div>
+          </div>
+          {% endif %}
+          <div class="mb-3">
+            <label class="form-label">Message</label>
+            <textarea name="message" class="form-control" rows="4" placeholder="Bug report, suggestion, anything..." required></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Send Feedback</button>
+          {% if about.email %}
+          <a href="mailto:{{ about.email }}" class="btn btn-outline-light ms-2">Email Directly Instead</a>
+          {% endif %}
+        </form>
+      </div>
+    </div>
+
+    <div class="text-center">
+      <a href="{{ url_for('index') }}" class="btn btn-outline-light btn-sm">&larr; Back home</a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

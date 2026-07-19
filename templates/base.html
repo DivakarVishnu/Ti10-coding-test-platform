@@ -31,14 +31,15 @@
   </div>
   {% endblock %}
 
-  <nav class="navbar navbar-dark bg-dark px-3 sticky-top">
+ <nav class="navbar navbar-dark bg-dark px-3 sticky-top">
     <span class="navbar-brand mb-0 h1">Ti10</span>
-    <div class="d-flex align-items-center">
+    <div class="d-flex align-items-center gap-2">
+      <a href="{{ url_for('about') }}" class="btn btn-outline-light btn-sm">About</a>
       {% if session.get('student_id') %}
-        <span class="text-light me-3 d-none d-sm-inline small">{{ session.get('student_name') }}</span>
+        <span class="text-light me-1 d-none d-sm-inline small">{{ session.get('student_name') }}</span>
         <a href="{{ url_for('logout') }}" class="btn btn-outline-light btn-sm">Logout</a>
       {% elif session.get('admin_id') %}
-        <span class="text-light me-3 d-none d-sm-inline small">Admin: {{ session.get('admin_username') }}</span>
+        <span class="text-light me-1 d-none d-sm-inline small">Admin: {{ session.get('admin_username') }}</span>
         <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-light btn-sm">Logout</a>
       {% endif %}
     </div>

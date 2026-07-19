@@ -64,9 +64,11 @@
 <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
   <h5 class="mb-0">Questions</h5>
   <div>
-   <a href="{{ url_for('admin_students') }}" class="btn btn-outline-secondary btn-sm">Students</a>
+  <a href="{{ url_for('admin_students') }}" class="btn btn-outline-secondary btn-sm">Students</a>
     <a href="{{ url_for('admin_submissions') }}" class="btn btn-outline-secondary btn-sm">Submissions</a>
     <a href="{{ url_for('admin_analytics') }}" class="btn btn-outline-secondary btn-sm">Analytics</a>
+    <a href="{{ url_for('admin_feedback') }}" class="btn btn-outline-secondary btn-sm">Feedback</a>
+    <a href="{{ url_for('admin_about') }}" class="btn btn-outline-secondary btn-sm">Edit About</a>
     <a href="{{ url_for('admin_new_question') }}" class="btn btn-primary btn-sm">+ New Question</a>
   </div>
 </div>
@@ -79,12 +81,19 @@
       <a href="{{ url_for('admin_dashboard', year=y) }}" class="btn btn-sm {{ 'btn-primary' if year_filter == y else 'btn-outline-secondary' }}">{{ y }}</a>
     {% endfor %}
   </div>
-  {% if year_filter %}
-  <form method="POST" action="{{ url_for('admin_archive_year') }}"
-        onsubmit="return confirm('Hide all released questions for {{ year_filter }} from students? You can re-release any of them individually later.')">
-    <input type="hidden" name="year" value="{{ year_filter }}">
-    <button class="btn btn-sm btn-outline-warning">Archive {{ year_filter }} Test</button>
-  </form>
+ {% if year_filter %}
+  <div class="d-flex gap-2">
+    <form method="POST" action="{{ url_for('admin_release_year') }}"
+          onsubmit="return confirm('Release ALL questions for {{ year_filter }} to students at once?')">
+      <input type="hidden" name="year" value="{{ year_filter }}">
+      <button class="btn btn-sm btn-success">Release All {{ year_filter }}</button>
+    </form>
+    <form method="POST" action="{{ url_for('admin_archive_year') }}"
+          onsubmit="return confirm('Hide all released questions for {{ year_filter }} from students? You can re-release any of them individually later.')">
+      <input type="hidden" name="year" value="{{ year_filter }}">
+      <button class="btn btn-sm btn-outline-warning">Archive {{ year_filter }} Test</button>
+    </form>
+  </div>
   {% endif %}
 </div>
 {% endif %}

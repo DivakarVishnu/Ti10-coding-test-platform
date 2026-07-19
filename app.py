@@ -13,7 +13,7 @@ from flask import (
 from config import Config
 from models import (
     db, Admin, Student, Settings, Question, TestCase,
-    Submission, Draft, QuestionAttempt, utcnow
+    Submission, Draft, QuestionAttempt, Feedback, AboutPage, utcnow
 )
 import judge0_client as judge0
 
@@ -39,12 +39,13 @@ def ensure_db_ready():
 with app.app_context():
     ensure_db_ready()
 
-
 @app.before_request
 def _check_db():
     from sqlalchemy import inspect
+    required_tables = {"settings", "students", "questions", "about_page", "feedback"}
     try:
-        if "settings" not in inspect(db.engine).get_table_names():
+        existing = set(inspect(db.engine).get_table_names())
+        if not required_tables.issubset(existing):
             with app.app_context():
                 ensure_db_ready()
     except Exception:
@@ -67,6 +68,9 @@ app.jinja_env.filters["ist"] = to_ist
 
 UPLOAD_DIR = os.path.join(app.static_folder, "uploads", "questions")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+ABOUT_UPLOAD_DIR = os.path.join(app.static_folder, "uploads", "about")
+os.makedirs(ABOUT_UPLOAD_DIR, exist_ok=True)
 ALLOWED_IMAGE_EXT = {"png", "jpg", "jpeg", "gif", "webp"}
 
 
@@ -183,6 +187,80 @@ def login():
 def logout():
     session.clear()
     return redirect(url_for("login"))
+
+
+@app.route("/about")
+def about():
+    return render_template("about.html", about=AboutPage.get())
+
+
+@app.route("/admin/about", methods=["GET", "POST"])
+@admin_required
+def admin_about():
+    about = AboutPage.get()
+    if request.method == "POST":
+        about.name = request.form.get("name", "").strip()
+        about.bio = request.form.get("bio", "").strip()
+        about.email = request.form.get("email", "").strip()
+        about.phone = request.form.get("phone", "").strip()
+        about.linkedin_url = request.form.get("linkedin_url", "").strip()
+        about.github_url = request.form.get("github_url", "").strip()
+        about.instagram_url = request.form.get("instagram_url", "").strip()
+        about.twitter_url = request.form.get("twitter_url", "").strip()
+        about.portfolio_url = request.form.get("portfolio_url", "").strip()
+
+        photo_file = request.files.get("photo")
+        if photo_file and photo_file.filename and allowed_image(photo_file.filename):
+            ext = photo_file.filename.rsplit(".", 1)[1].lower()
+            filename = f"about_{uuid.uuid4().hex}.{ext}"
+            photo_file.save(os.path.join(ABOUT_UPLOAD_DIR, filename))
+            about.photo_filename = filename
+
+        db.session.commit()
+        flash("About page updated.", "success")
+        return redirect(url_for("admin_about"))
+
+    return render_template("admin_about.html", about=about)
+
+
+@app.route("/about/feedback", methods=["POST"])
+def submit_feedback():
+    message = request.form.get("message", "").strip()
+    name = request.form.get("name", "").strip()
+    email = request.form.get("email", "").strip()
+
+    if session.get("student_id"):
+        student = Student.query.get(session["student_id"])
+        if student:
+            name = name or student.name
+            email = email or student.email
+
+    if not message:
+        flash("Please write a message before sending.", "error")
+        return redirect(url_for("about"))
+
+    fb = Feedback(name=name or None, email=email or None, message=message)
+    db.session.add(fb)
+    db.session.commit()
+    flash("Thanks! Your feedback has been sent.", "success")
+    return redirect(url_for("about"))
+
+
+@app.route("/admin/feedback")
+@admin_required
+def admin_feedback():
+    items = Feedback.query.order_by(Feedback.created_at.desc()).all()
+    return render_template("admin_feedback.html", items=items)
+
+
+@app.route("/admin/feedback/<int:fid>/delete", methods=["POST"])
+@admin_required
+def admin_delete_feedback(fid):
+    fb = Feedback.query.get_or_404(fid)
+    db.session.delete(fb)
+    db.session.commit()
+    flash("Feedback deleted.", "success")
+    return redirect(url_for("admin_feedback"))
 
 
 @app.route("/guest-login", methods=["POST"])
@@ -842,6 +920,28 @@ def admin_archive_year():
     flash(
         f"Archived {count} question(s){' for ' + year if year else ''}. "
         "They're hidden from students but not deleted — you can re-release any of them later.",
+        "success",
+    )
+    return redirect(url_for("admin_dashboard", year=year))
+
+
+@app.route("/admin/questions/release-year", methods=["POST"])
+@admin_required
+def admin_release_year():
+    year = request.form.get("year", "").strip()
+    q = Question.query.filter_by(is_published=True)
+    if year:
+        q = q.filter_by(year=year)
+    questions = q.all()
+    count = 0
+    for question in questions:
+        if not question.is_released:
+            question.is_released = True
+            question.released_at = utcnow()
+            count += 1
+    db.session.commit()
+    flash(
+        f"Released {count} question(s){' for ' + year if year else ''} to students at once.",
         "success",
     )
     return redirect(url_for("admin_dashboard", year=year))
