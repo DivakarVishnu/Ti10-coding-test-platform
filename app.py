@@ -63,8 +63,10 @@ LANGUAGES = judge0.LANGUAGES
 
 def log_activity(action, details=""):
     try:
+        from flask import has_request_context
+        admin_name = session.get("admin_username") if has_request_context() else None
         entry = AdminActivityLog(
-            admin_username=session.get("admin_username"),
+            admin_username=admin_name,
             action=action,
             details=details,
         )
