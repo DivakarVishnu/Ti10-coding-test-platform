@@ -16,11 +16,9 @@ from models import (
     Submission, Draft, QuestionAttempt, Feedback, AboutPage, AdminActivityLog, utcnow
 )
 import judge0_client as judge0
-photo_file = request.files.get("photo")
-if photo_file and photo_file.filename and allowed_image(photo_file.filename):
-    uploaded_url = upload_to_cloudinary(photo_file, folder="ti10/about")
-    if uploaded_url:
-        about.photo_filename = uploaded_url
+import cloudinary
+import cloudinary.uploader
+from difflib import SequenceMatcher
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -59,6 +57,8 @@ def _check_db():
 
 
 LANGUAGES = judge0.LANGUAGES
+
+cloudinary.config(cloudinary_url=os.getenv("CLOUDINARY_URL"))
 
 
 def log_activity(action, details=""):
