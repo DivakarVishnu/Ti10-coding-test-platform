@@ -16,8 +16,8 @@
       <div class="card">
         <div class="card-body text-center">
           <h6 class="text-muted mb-3">Photo</h6>
-          {% if about.photo_filename %}
-            <img src="{{ url_for('static', filename='uploads/about/' + about.photo_filename) }}"
+         {% if about.photo_filename %}
+            <img src="{{ about.photo_filename }}"
                  class="about-avatar mb-3" alt="Current photo">
           {% else %}
             <div class="text-muted small mb-3">No photo uploaded yet</div>
