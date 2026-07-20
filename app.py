@@ -1194,6 +1194,15 @@ def admin_activity():
     return render_template("admin_activity.html", logs=logs)
 
 
+@app.route("/admin/activity/clear", methods=["POST"])
+@admin_required
+def admin_clear_activity_log():
+    count = AdminActivityLog.query.delete()
+    db.session.commit()
+    flash(f"Cleared {count} activity log entr{'y' if count == 1 else 'ies'}.", "success")
+    return redirect(url_for("admin_activity"))
+
+
 ADMIN_SIGNATORY_NAME = "A. Divakar"
 
 
