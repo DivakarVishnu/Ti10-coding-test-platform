@@ -1194,22 +1194,42 @@ def admin_activity():
     return render_template("admin_activity.html", logs=logs)
 
 
+ADMIN_SIGNATORY_NAME = "A. Divakar"
+
+
+def _build_certificate_context(student, subs):
+    total_score = sum(s.score or 0 for s in subs)
+    total_max = sum(s.max_score or 0 for s in subs)
+    pct = round((total_score / total_max) * 100, 1) if total_max else 0
+    latest_date = max((s.submitted_at for s in subs if s.submitted_at), default=None)
+    return {
+        "student": student,
+        "total_score": total_score,
+        "total_max": total_max,
+        "pct": pct,
+        "questions_completed": len(subs),
+        "signatory_name": ADMIN_SIGNATORY_NAME,
+        "issued_date": to_ist(latest_date) if latest_date else to_ist(utcnow()),
+    }
+
+
 @app.route("/admin/certificate/<int:sid>")
 @admin_required
 def admin_certificate(sid):
     student = Student.query.get_or_404(sid)
     subs = Submission.query.filter_by(student_id=sid).all()
-    total_score = sum(s.score or 0 for s in subs)
-    total_max = sum(s.max_score or 0 for s in subs)
-    pct = round((total_score / total_max) * 100, 1) if total_max else 0
-    return render_template(
-        "certificate.html",
-        student=student,
-        total_score=total_score,
-        total_max=total_max,
-        pct=pct,
-        questions_completed=len(subs),
-    )
+    return render_template("certificate.html", **_build_certificate_context(student, subs))
+
+
+@app.route("/certificate")
+@student_required
+def student_certificate():
+    student = Student.query.get_or_404(session["student_id"])
+    subs = Submission.query.filter_by(student_id=student.id).all()
+    if not subs:
+        flash("Submit at least one question before downloading a certificate.", "error")
+        return redirect(url_for("dashboard"))
+    return render_template("certificate.html", **_build_certificate_context(student, subs))
 
 
 @app.route("/admin/export.csv")

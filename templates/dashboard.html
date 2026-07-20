@@ -1,7 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Dashboard — Ti10{% endblock %}
 {% block content %}
-<h3 class="mb-1">{{ settings.exam_title }}</h3>
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+  <h3 class="mb-1">{{ settings.exam_title }}</h3>
+  <a href="{{ url_for('student_certificate') }}" class="btn btn-sm btn-outline-secondary">View My Certificate</a>
+</div>
 
 {% if settings.start_time or settings.end_time %}
   <p class="text-muted small">
