@@ -42,7 +42,7 @@
     <label class="form-label">Question Image (optional — diagram, sample table, etc.)</label>
     {% if question and question.image_filename %}
       <div class="mb-2">
-        <img src="{{ url_for('static', filename='uploads/questions/' + question.image_filename) }}" class="q-image" style="max-height:200px;">
+        <img src="{{ question.image_filename }}" class="q-image" style="max-height:200px;">
         <div class="form-check mt-1">
           <input class="form-check-input" type="checkbox" name="remove_image" id="rmimg">
           <label class="form-check-label small text-muted" for="rmimg">Remove this image</label>

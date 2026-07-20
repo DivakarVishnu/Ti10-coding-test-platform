@@ -33,7 +33,7 @@
         <h4 class="mb-3">👋 About Me</h4>
         <div class="d-flex flex-column flex-sm-row align-items-center align-items-sm-start gap-3">
           {% if about.photo_filename %}
-            <img src="{{ url_for('static', filename='uploads/about/' + about.photo_filename) }}"
+            <img src="{{ about.photo_filename }}"
                  alt="Photo of {{ about.name or 'the creator' }}"
                  class="about-avatar">
           {% else %}

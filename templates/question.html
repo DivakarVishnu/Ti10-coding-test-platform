@@ -38,7 +38,7 @@
 <div class="row">
   <div class="col-lg-5">
     {% if q.image_filename %}
-    <img src="{{ url_for('static', filename='uploads/questions/' + q.image_filename) }}" class="q-image w-100">
+    <img src="{{ q.image_filename }}" class="q-image w-100">
     {% endif %}
 
     <div class="card mb-3">

@@ -17,6 +17,10 @@ from models import (
 )
 import judge0_client as judge0
 from difflib import SequenceMatcher
+import cloudinary
+import cloudinary.uploader
+
+cloudinary.config(cloudinary_url=os.getenv("CLOUDINARY_URL"))
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -111,6 +115,15 @@ def admin_required(f):
 
 def allowed_image(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_IMAGE_EXT
+
+
+def upload_to_cloudinary(file_storage, folder):
+    """Uploads a file object to Cloudinary and returns its permanent URL, or None on failure."""
+    try:
+        result = cloudinary.uploader.upload(file_storage, folder=folder)
+        return result.get("secure_url")
+    except Exception:
+        return None
 
 
 # --------------------------------------------------------------------------
@@ -225,10 +238,9 @@ def admin_about():
 
         photo_file = request.files.get("photo")
         if photo_file and photo_file.filename and allowed_image(photo_file.filename):
-            ext = photo_file.filename.rsplit(".", 1)[1].lower()
-            filename = f"about_{uuid.uuid4().hex}.{ext}"
-            photo_file.save(os.path.join(ABOUT_UPLOAD_DIR, filename))
-            about.photo_filename = filename
+            uploaded_url = upload_to_cloudinary(photo_file, folder="ti10/about")
+            if uploaded_url:
+                about.photo_filename = uploaded_url
 
         db.session.commit()
         flash("About page updated.", "success")
@@ -808,9 +820,7 @@ def admin_new_question():
         image_filename = None
         image_file = request.files.get("image")
         if image_file and image_file.filename and allowed_image(image_file.filename):
-            ext = image_file.filename.rsplit(".", 1)[1].lower()
-            image_filename = f"{uuid.uuid4().hex}.{ext}"
-            image_file.save(os.path.join(UPLOAD_DIR, image_filename))
+            image_filename = upload_to_cloudinary(image_file, folder="ti10/questions")
 
         q = Question(
             title=title,
@@ -868,10 +878,9 @@ def admin_edit_question(qid):
         if remove_image:
             q.image_filename = None
         if image_file and image_file.filename and allowed_image(image_file.filename):
-            ext = image_file.filename.rsplit(".", 1)[1].lower()
-            image_filename = f"{uuid.uuid4().hex}.{ext}"
-            image_file.save(os.path.join(UPLOAD_DIR, image_filename))
-            q.image_filename = image_filename
+            uploaded_url = upload_to_cloudinary(image_file, folder="ti10/questions")
+            if uploaded_url:
+                q.image_filename = uploaded_url
 
         TestCase.query.filter_by(question_id=q.id).delete()
         tc_inputs = request.form.getlist("tc_input[]")
