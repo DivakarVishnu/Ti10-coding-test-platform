@@ -3,7 +3,12 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
   <h3 class="mb-1">{{ settings.exam_title }}</h3>
-  <a href="{{ url_for('student_certificate') }}" class="btn btn-sm btn-outline-secondary">View My Certificate</a>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('student_certificate') }}" class="btn btn-sm btn-outline-secondary">View My Certificate</a>
+    {% if leaderboard_published %}
+      <a href="{{ url_for('student_leaderboard') }}" class="btn btn-sm btn-outline-secondary">Leaderboard</a>
+    {% endif %}
+  </div>
 </div>
 
 {% if settings.start_time or settings.end_time %}
@@ -30,8 +35,8 @@
         </div>
       </div>
       <div>
-        {% if q.id in best_scores %}
-          <span class="badge bg-success">Best: {{ best_scores[q.id] }} / {{ q.marks }}</span>
+       {% if q.id in best_scores %}
+          <span class="badge bg-success">✓ Completed — {{ best_scores[q.id] }} / {{ q.marks }} (locked)</span>
         {% else %}
           <span class="badge bg-secondary">Not attempted</span>
         {% endif %}

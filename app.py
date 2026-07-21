@@ -339,6 +339,7 @@ def dashboard():
         settings=settings,
         is_open=settings.is_open(),
         student=student,
+        leaderboard_published=settings.is_leaderboard_published(student.year),
     )
 
 
@@ -976,6 +977,7 @@ def admin_duplicate_question(qid):
 @admin_required
 def admin_archive_year():
     year = request.form.get("year", "").strip()
+    auto_publish = bool(request.form.get("auto_publish_results"))
     q = Question.query
     if year:
         q = q.filter_by(year=year)
@@ -985,13 +987,42 @@ def admin_archive_year():
         if question.is_released:
             question.is_released = False
             count += 1
+
+    settings = Settings.get()
+    if auto_publish and year:
+        settings.publish_year(year)
+        log_activity("Publish Results", f"Auto-published leaderboard for {year} during archive.")
+
     db.session.commit()
     log_activity("Archive Year", f"Archived {count} question(s){' for ' + year if year else ''}.")
-    flash(
-        f"Archived {count} question(s){' for ' + year if year else ''}. "
-        "They're hidden from students but not deleted — you can re-release any of them later.",
-        "success",
-    )
+    msg = f"Archived {count} question(s){' for ' + year if year else ''}."
+    if auto_publish and year:
+        msg += " Results are now published to students."
+    flash(msg, "success")
+    return redirect(url_for("admin_dashboard", year=year))
+
+
+@app.route("/admin/questions/release-results", methods=["POST"])
+@admin_required
+def admin_release_results():
+    year = request.form.get("year", "").strip()
+    settings = Settings.get()
+    settings.publish_year(year)
+    db.session.commit()
+    log_activity("Publish Results", f"Leaderboard published for {year or 'all years'}.")
+    flash(f"Results/leaderboard published to students for {year or 'all years'}.", "success")
+    return redirect(url_for("admin_dashboard", year=year))
+
+
+@app.route("/admin/questions/hide-results", methods=["POST"])
+@admin_required
+def admin_hide_results():
+    year = request.form.get("year", "").strip()
+    settings = Settings.get()
+    settings.unpublish_year(year)
+    db.session.commit()
+    log_activity("Hide Results", f"Leaderboard hidden for {year or 'all years'}.")
+    flash(f"Results/leaderboard hidden from students for {year or 'all years'}.", "success")
     return redirect(url_for("admin_dashboard", year=year))
 
 
@@ -1228,6 +1259,47 @@ def admin_certificate(sid):
     student = Student.query.get_or_404(sid)
     subs = Submission.query.filter_by(student_id=sid).all()
     return render_template("certificate.html", **_build_certificate_context(student, subs))
+
+
+@app.route("/leaderboard")
+@student_required
+def student_leaderboard():
+    student = Student.query.get(session["student_id"])
+    settings = Settings.get()
+    if not settings.is_leaderboard_published(student.year):
+        flash("Results for your batch haven't been published yet. Check back later.", "error")
+        return redirect(url_for("dashboard"))
+
+    peers = Student.query.filter_by(status="approved", year=student.year).all()
+    peer_ids = [s.id for s in peers]
+
+    subs = Submission.query.filter(Submission.student_id.in_(peer_ids)).all() if peer_ids else []
+    totals = {}
+    for s in subs:
+        t = totals.setdefault(s.student_id, {"score": 0.0, "max": 0.0, "count": 0})
+        t["score"] += s.score or 0
+        t["max"] += s.max_score or 0
+        t["count"] += 1
+
+    board = []
+    for p in peers:
+        t = totals.get(p.id, {"score": 0.0, "max": 0.0, "count": 0})
+        pct = round((t["score"] / t["max"]) * 100, 1) if t["max"] else 0
+        board.append({
+            "student": p,
+            "score": round(t["score"], 2),
+            "max": round(t["max"], 2),
+            "count": t["count"],
+            "pct": pct,
+            "is_me": p.id == student.id,
+        })
+    board.sort(key=lambda x: x["score"], reverse=True)
+
+    return render_template(
+        "student_leaderboard.html",
+        board=board,
+        student=student,
+    )
 
 
 @app.route("/certificate")

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Leaderboard — Ti10{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <h4 class="mb-0">Leaderboard {% if student.year %}— {{ student.year }}{% endif %}</h4>
+  <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-sm">&larr; Back</a>
+</div>
+
+{% if board|length >= 1 %}
+<div class="podium-wrap">
+  {% for row in board[:3] %}
+  <div class="podium-card place-{{ loop.index }}">
+    {% if loop.index == 1 %}<div class="podium-crown">👑</div>{% endif %}
+    <div class="podium-avatar">{{ row.student.name[0]|upper }}</div>
+    <div class="podium-name">{{ row.student.name }}{% if row.is_me %} <span class="badge bg-info">You</span>{% endif %}</div>
+    <div class="podium-score">{{ row.score }} pts &middot; {{ row.pct }}%</div>
+    <div class="podium-block">{{ loop.index }}</div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="table-responsive">
+<table class="table table-bordered bg-white">
+  <thead><tr><th>#</th><th>Name</th><th>Score</th><th>%</th><th>Questions</th></tr></thead>
+  <tbody>
+    {% for row in board %}
+    <tr {% if row.is_me %}style="background: var(--accent-soft);"{% endif %}>
+      <td>{{ loop.index }}</td>
+      <td>
+        {{ row.student.name }}
+        {% if row.is_me %}<span class="badge bg-info ms-1">You</span>{% endif %}
+      </td>
+      <td>{{ row.score }} / {{ row.max }}</td>
+      <td>{{ row.pct }}%</td>
+      <td>{{ row.count }}</td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5" class="text-muted">No results yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

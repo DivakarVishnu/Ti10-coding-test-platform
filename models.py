@@ -56,6 +56,24 @@ class Settings(db.Model):
     end_time = db.Column(db.DateTime, nullable=True)
     max_tab_switches = db.Column(db.Integer, default=3)
     allow_guest_login = db.Column(db.Boolean, default=False)
+    published_leaderboard_years = db.Column(db.Text, nullable=True)  # comma-separated year list
+
+    def is_leaderboard_published(self, year):
+        if not self.published_leaderboard_years:
+            return False
+        published = [y.strip() for y in self.published_leaderboard_years.split(",") if y.strip()]
+        return (year or "") in published
+
+    def publish_year(self, year):
+        current = [y.strip() for y in (self.published_leaderboard_years or "").split(",") if y.strip()]
+        if year not in current:
+            current.append(year)
+        self.published_leaderboard_years = ",".join(current)
+
+    def unpublish_year(self, year):
+        current = [y.strip() for y in (self.published_leaderboard_years or "").split(",") if y.strip()]
+        current = [y for y in current if y != year]
+        self.published_leaderboard_years = ",".join(current)
 
     @staticmethod
     def get():

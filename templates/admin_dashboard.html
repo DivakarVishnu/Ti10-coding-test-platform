@@ -84,17 +84,36 @@
     {% endfor %}
   </div>
  {% if year_filter %}
-  <div class="d-flex gap-2">
+  <div class="d-flex gap-2 flex-wrap">
     <form method="POST" action="{{ url_for('admin_release_year') }}"
           onsubmit="return confirm('Release ALL questions for {{ year_filter }} to students at once?')">
       <input type="hidden" name="year" value="{{ year_filter }}">
       <button class="btn btn-sm btn-success">Release All {{ year_filter }}</button>
     </form>
-    <form method="POST" action="{{ url_for('admin_archive_year') }}"
-          onsubmit="return confirm('Hide all released questions for {{ year_filter }} from students? You can re-release any of them individually later.')">
+
+    <form method="POST" action="{{ url_for('admin_archive_year') }}" class="d-flex gap-1"
+          onsubmit="return confirm('Hide all released questions for {{ year_filter }}? You can re-release any of them individually later.')">
       <input type="hidden" name="year" value="{{ year_filter }}">
+      <div class="form-check d-flex align-items-center me-1">
+        <input class="form-check-input me-1" type="checkbox" name="auto_publish_results" id="autopub" checked>
+        <label class="form-check-label small text-muted" for="autopub">also publish results</label>
+      </div>
       <button class="btn btn-sm btn-outline-warning">Archive {{ year_filter }} Test</button>
     </form>
+
+    {% if settings.is_leaderboard_published(year_filter) %}
+    <form method="POST" action="{{ url_for('admin_hide_results') }}"
+          onsubmit="return confirm('Hide the leaderboard/results for {{ year_filter }} from students?')">
+      <input type="hidden" name="year" value="{{ year_filter }}">
+      <button class="btn btn-sm btn-outline-secondary">Hide Results</button>
+    </form>
+    {% else %}
+    <form method="POST" action="{{ url_for('admin_release_results') }}"
+          onsubmit="return confirm('Publish the leaderboard/results for {{ year_filter }} to students now?')">
+      <input type="hidden" name="year" value="{{ year_filter }}">
+      <button class="btn btn-sm btn-primary">Release Results</button>
+    </form>
+    {% endif %}
   </div>
   {% endif %}
 </div>

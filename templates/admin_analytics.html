@@ -38,6 +38,21 @@
 <div class="card mb-4">
   <div class="card-body">
     <h5>Leaderboard{% if year_filter %} — {{ year_filter }}{% endif %}</h5>
+
+    {% if leaderboard|length >= 1 %}
+    <div class="podium-wrap">
+      {% for row in leaderboard[:3] %}
+      <div class="podium-card place-{{ loop.index }}">
+        {% if loop.index == 1 %}<div class="podium-crown">👑</div>{% endif %}
+        <div class="podium-avatar">{{ row.student.name[0]|upper }}</div>
+        <div class="podium-name">{{ row.student.name }}</div>
+        <div class="podium-score">{{ row.score }} pts &middot; {{ row.pct }}%</div>
+        <div class="podium-block">{{ loop.index }}</div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
     <div class="table-responsive">
     <table class="table table-bordered bg-white">
 <thead><tr><th>#</th><th>Name</th><th>Register No</th><th>Year</th><th>Score</th><th>%</th><th>Questions Attempted</th><th></th></tr></thead>      <tbody>
