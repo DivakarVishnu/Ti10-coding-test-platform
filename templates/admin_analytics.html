@@ -1,6 +1,28 @@
 {% extends "base.html" %}
 {% block title %}Analytics — Ti10 Admin{% endblock %}
 {% block content %}
+<div class="card mb-3 border-warning">
+  <div class="card-body">
+    <h6 class="text-warning mb-2">Merge Duplicate/Messy Year Tabs</h6>
+    <p class="text-muted small mb-2">
+      Pick a messy or duplicate year value and merge every student and question under it into the correct one.
+      This updates all matching records at once — no manual editing needed.
+    </p>
+    <form method="POST" action="{{ url_for('admin_merge_years') }}" class="d-flex flex-wrap gap-2 align-items-center"
+          onsubmit="return confirm('Merge the selected year into the target year? This cannot be undone.')">
+      <select name="from_year" class="form-select w-auto" required>
+        <option value="" disabled selected>Merge FROM...</option>
+        {% for y in years %}
+          <option value="{{ y }}">{{ y }}</option>
+        {% endfor %}
+      </select>
+      <span class="text-muted">into</span>
+      <input type="text" name="to_year" class="form-control w-auto" placeholder="Correct year, e.g. II CSE B" required>
+      <button type="submit" class="btn btn-sm btn-warning">Merge</button>
+    </form>
+  </div>
+</div>
+
 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
   <h4 class="mb-0">Result Analytics</h4>
   <div class="d-flex gap-2">

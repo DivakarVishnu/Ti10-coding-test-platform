@@ -1172,7 +1172,9 @@ def admin_analytics():
             "full_marks": full_marks,
         })
 
-    years = sorted(set(s.year for s in Student.query.all() if s.year))
+    student_years = set(s.year for s in Student.query.all() if s.year)
+    question_years = set(q.year for q in Question.query.all() if q.year)
+    years = sorted(student_years | question_years)
 
     return render_template(
         "admin_analytics.html",
@@ -1311,6 +1313,34 @@ def student_certificate():
         flash("Submit at least one question before downloading a certificate.", "error")
         return redirect(url_for("dashboard"))
     return render_template("certificate.html", **_build_certificate_context(student, subs))
+
+
+@app.route("/admin/years/merge", methods=["POST"])
+@admin_required
+def admin_merge_years():
+    from_year = request.form.get("from_year", "").strip()
+    to_year = request.form.get("to_year", "").strip()
+
+    if not from_year or not to_year:
+        flash("Please select both a year to merge from and a year to merge into.", "error")
+        return redirect(url_for("admin_analytics"))
+    if from_year == to_year:
+        flash("Those are the same year — nothing to merge.", "error")
+        return redirect(url_for("admin_analytics"))
+
+    students_updated = Student.query.filter_by(year=from_year).update({"year": to_year})
+    questions_updated = Question.query.filter_by(year=from_year).update({"year": to_year})
+
+    settings = Settings.get()
+    if settings.published_leaderboard_years:
+        years_list = [y.strip() for y in settings.published_leaderboard_years.split(",") if y.strip()]
+        years_list = [to_year if y == from_year else y for y in years_list]
+        settings.published_leaderboard_years = ",".join(sorted(set(years_list)))
+
+    db.session.commit()
+    log_activity("Merge Years", f'Merged "{from_year}" into "{to_year}" ({students_updated} students, {questions_updated} questions).')
+    flash(f'Merged "{from_year}" into "{to_year}" — {students_updated} student(s) and {questions_updated} question(s) updated.', "success")
+    return redirect(url_for("admin_analytics"))
 
 
 @app.route("/admin/export.csv")
