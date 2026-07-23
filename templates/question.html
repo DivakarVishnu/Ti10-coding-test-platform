@@ -3,6 +3,20 @@
 {% block title %}{{ q.title }} — Ti10{% endblock %}
 {% block content %}
 
+<style>
+  /* Anti-cheat: disable text selection everywhere on this page (question
+     text, test cases, editor) on both desktop and mobile. Typing inside
+     Monaco / the fallback textarea is unaffected — selection isn't needed
+     to type, only to copy, and copy is blocked separately in JS below. */
+  .question-noselect, .question-noselect * {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none; /* disable iOS long-press "Copy/Look Up" menu */
+  }
+</style>
+
 <div id="violation-banner" class="violation-banner"></div>
 
 <div class="d-flex justify-content-between align-items-start mb-2 flex-wrap gap-2">
@@ -35,7 +49,7 @@
 
 <div id="results-panel" class="results-panel-top"></div>
 
-<div class="row">
+<div class="row question-noselect">
   <div class="col-lg-5">
     {% if q.image_filename %}
     <img src="{{ q.image_filename }}" class="q-image w-100">
@@ -97,16 +111,45 @@
   let locked = ALREADY_SUBMITTED;
   let submitting = false;
 
+  // Blocks clipboard use (copy/cut/paste, including the mobile long-press
+  // menu) and the right-click context menu on a given element.
   function blockClipboard(el) {
     ['paste', 'copy', 'cut'].forEach((evt) => {
       el.addEventListener(evt, (e) => e.preventDefault(), true);
     });
     el.addEventListener('contextmenu', (e) => e.preventDefault(), true);
+    el.addEventListener('dragstart', (e) => e.preventDefault(), true); // no drag-drop of text/files in
+    el.addEventListener('drop', (e) => e.preventDefault(), true);
     el.addEventListener('keydown', (e) => {
       const k = e.key ? e.key.toLowerCase() : '';
       if ((e.ctrlKey || e.metaKey) && (k === 'v' || k === 'c' || k === 'x')) {
         e.preventDefault();
       }
+    }, true);
+  }
+
+  // Blocks browser shortcuts commonly used to open dev tools, view source,
+  // print, save the page, or open a new tab/window while on the test page.
+  // NOTE (be upfront about this with anyone reviewing the feature): this
+  // only catches key combinations pressed *while the browser window has
+  // focus*. It cannot intercept OS-level app switching (Alt+Tab to another
+  // application, opening a second device, a phone, or a browser extension/
+  // AutoHotkey-style remap done outside the page) — no in-page JavaScript
+  // can do that. Chrome/Firefox also reserve a few combos (Ctrl+T, Ctrl+N,
+  // Ctrl+W) that a web page is never allowed to intercept, by design, for
+  // security reasons. Treat this as a deterrent + logging signal, not an
+  // unbeatable lock — the tab-switch/blur violation counter below is what
+  // actually catches someone leaving the page.
+  function blockDevToolsAndShortcuts() {
+    document.addEventListener('keydown', (e) => {
+      const k = e.key ? e.key.toLowerCase() : '';
+      const ctrlOrCmd = e.ctrlKey || e.metaKey;
+
+      if (e.key === 'F12') { e.preventDefault(); return; }                         // DevTools
+      if (ctrlOrCmd && e.shiftKey && ['i', 'j', 'c'].includes(k)) { e.preventDefault(); return; } // DevTools panels
+      if (ctrlOrCmd && k === 'u') { e.preventDefault(); return; }                   // View source
+      if (ctrlOrCmd && k === 's') { e.preventDefault(); return; }                   // Save page
+      if (ctrlOrCmd && k === 'p') { e.preventDefault(); return; }                   // Print
     }, true);
   }
 
@@ -182,6 +225,23 @@
   document.addEventListener('visibilitychange', function () {
     if (document.hidden) flagViolation('tab switch');
   });
+
+  // Extra layer: 'blur' fires when the browser window itself loses focus
+  // (e.g. clicking/alt-tabbing to another app, a second monitor window, or
+  // an on-screen AI assistant) even in cases where visibilitychange does
+  // not fire the same way across browsers/OSes. Debounced together with
+  // visibilitychange above via the shared lastViolationAt guard in
+  // flagViolation, so a single tab-switch isn't counted twice.
+  window.addEventListener('blur', function () {
+    flagViolation('window switch');
+  });
+
+  // Lock down clipboard/context-menu on the whole page (question text,
+  // test cases, editor) — not just the editor — and disable common
+  // dev-tools / save / print shortcuts. See blockDevToolsAndShortcuts()
+  // above for what this can and can't catch.
+  blockClipboard(document);
+  blockDevToolsAndShortcuts();
 
   // -------------------- Countdown ring --------------------
   if (REMAINING_SECONDS !== null) {
