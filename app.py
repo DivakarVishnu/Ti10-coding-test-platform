@@ -19,7 +19,9 @@ import judge0_client as judge0
 import cloudinary
 import cloudinary.uploader
 from difflib import SequenceMatcher
+import re
 
+EMAIL_REGEX = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
 app = Flask(__name__)
 app.config.from_object(Config)
 
@@ -135,6 +137,8 @@ def upload_to_cloudinary(file_storage, folder):
 def index():
     if session.get("student_id"):
         return redirect(url_for("dashboard"))
+    if session.get("admin_id"):
+        return redirect(url_for("admin_dashboard"))
     return redirect(url_for("login"))
 
 
@@ -150,6 +154,9 @@ def register():
 
         if not name or not email or not register_no or not password:
             flash("Please fill in all fields.", "error")
+            return redirect(url_for("register"))
+        if not EMAIL_REGEX.match(email):
+            flash("Please enter a valid email address.", "error")
             return redirect(url_for("register"))
         if password != confirm:
             flash("Passwords do not match.", "error")
