@@ -9,22 +9,33 @@
       <label class="form-label">Title</label>
       <input type="text" name="title" class="form-control" required value="{{ question.title if question else '' }}">
     </div>
-    <div class="col-md-2">
+    <div class="col-md-3">
       <label class="form-label">Marks</label>
       <input type="number" name="marks" class="form-control" value="{{ question.marks if question else 10 }}">
     </div>
-    <div class="col-md-2">
+    <div class="col-md-3">
       <label class="form-label">Timer (minutes)</label>
       <input type="number" name="question_time_limit_min" min="1" class="form-control"
              placeholder="No limit"
              value="{{ question.question_time_limit_min if question and question.question_time_limit_min else '' }}">
     </div>
-    <div class="col-md-2">
+  </div>
+
+  <div class="row g-3 mb-3">
+    <div class="col-md-3">
       <label class="form-label">Year / Batch</label>
       <input type="text" name="year" class="form-control" placeholder="All years"
              value="{{ question.year if question and question.year else '' }}">
     </div>
-    <div class="col-md-2 d-flex align-items-end">
+    <div class="col-md-3">
+      <label class="form-label">Mode</label>
+      <select name="mode" class="form-select">
+        <option value="exam" {% if not question or question.mode == 'exam' %}selected{% endif %}>Exam</option>
+        <option value="club" {% if question and question.mode == 'club' %}selected{% endif %}>Club (unlimited retries)</option>
+        <option value="hackathon" {% if question and question.mode == 'hackathon' %}selected{% endif %}>Hackathon</option>
+      </select>
+    </div>
+    <div class="col-md-3 d-flex align-items-end">
       <div class="form-check">
         <input class="form-check-input" type="checkbox" name="is_published" id="pub"
                {% if not question or question.is_published %}checked{% endif %}>

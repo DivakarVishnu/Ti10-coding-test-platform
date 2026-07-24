@@ -34,6 +34,7 @@ class Student(db.Model):
     status = db.Column(db.String(20), default="pending")  # pending | approved | rejected
     year = db.Column(db.String(20), nullable=True)  # e.g. "2027" — set by admin
     created_at = db.Column(db.DateTime, default=utcnow)
+    is_club_member = db.Column(db.Boolean, default=False)
 
     submissions = db.relationship("Submission", backref="student", lazy=True)
 
@@ -109,6 +110,7 @@ class Question(db.Model):
     is_released = db.Column(db.Boolean, default=False)      # admin must manually release
     released_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=utcnow)
+    mode = db.Column(db.String(20), default="exam")  # exam | club | hackathon
 
     test_cases = db.relationship(
         "TestCase", backref="question", lazy=True, cascade="all, delete-orphan"

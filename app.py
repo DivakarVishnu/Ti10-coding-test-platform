@@ -368,6 +368,8 @@ def _check_question_access(q, student):
     """Returns True if this student is currently allowed to see/attempt this question."""
     if not q.is_released:
         return False
+    if q.mode == "club":
+        return student.is_club_member
     if not q.visible_to_year(student.year):
         return False
     return True
@@ -503,9 +505,10 @@ def submit_code(qid):
     if not settings.is_open():
         return jsonify({"error": "The test window is closed."}), 403
 
-    existing = Submission.query.filter_by(student_id=session["student_id"], question_id=qid).first()
-    if existing:
-        return jsonify({"error": "You have already submitted this question. Only one attempt is allowed."}), 403
+    if q.mode != "club":
+        existing = Submission.query.filter_by(student_id=session["student_id"], question_id=qid).first()
+        if existing:
+            return jsonify({"error": "You have already submitted this question. Only one attempt is allowed."}), 403
 
     data = request.get_json(silent=True) or {}
     code = data.get("code", "")
@@ -739,26 +742,38 @@ def admin_reset_student_password(sid):
 
 @app.route("/admin/students/clear-data", methods=["POST"])
 @admin_required
+@app.route("/admin/students/clear-data", methods=["POST"])
+@admin_required
 def admin_clear_student_data():
     year = request.form.get("year", "").strip()
-    q = Student.query
+    mode = request.form.get("mode", "").strip()  # "" = all modes, or "club"/"exam"/"hackathon"
+
+    sq = Student.query
     if year:
-        q = q.filter_by(year=year)
-    student_ids = [s.id for s in q.all()]
+        sq = sq.filter_by(year=year)
+    student_ids = [s.id for s in sq.all()]
     if not student_ids:
         flash("No students found for that year.", "error")
         return redirect(url_for("admin_students", status="approved"))
 
-    Submission.query.filter(Submission.student_id.in_(student_ids)).delete(synchronize_session=False)
-    Draft.query.filter(Draft.student_id.in_(student_ids)).delete(synchronize_session=False)
-    QuestionAttempt.query.filter(QuestionAttempt.student_id.in_(student_ids)).delete(synchronize_session=False)
+    sub_query = Submission.query.filter(Submission.student_id.in_(student_ids))
+    draft_query = Draft.query.filter(Draft.student_id.in_(student_ids))
+    attempt_query = QuestionAttempt.query.filter(QuestionAttempt.student_id.in_(student_ids))
+
+    if mode:
+        mode_qids = [q.id for q in Question.query.filter_by(mode=mode).all()]
+        sub_query = sub_query.filter(Submission.question_id.in_(mode_qids))
+        draft_query = draft_query.filter(Draft.question_id.in_(mode_qids))
+        attempt_query = attempt_query.filter(QuestionAttempt.question_id.in_(mode_qids))
+
+    sub_query.delete(synchronize_session=False)
+    draft_query.delete(synchronize_session=False)
+    attempt_query.delete(synchronize_session=False)
     db.session.commit()
-    log_activity("Clear Data", f"Cleared submissions for {len(student_ids)} student(s){' in ' + year if year else ' (all years)'}.")
-    flash(
-        f"Cleared submissions/drafts for {len(student_ids)} student(s)"
-        f"{' in year ' + year if year else ''}. Accounts kept.",
-        "success",
-    )
+
+    label = f"{mode or 'all'} data for {len(student_ids)} student(s)" + (f" in {year}" if year else "")
+    log_activity("Clear Data", f"Cleared {label}.")
+    flash(f"Cleared {label}. Accounts kept.", "success")
     return redirect(url_for("admin_students", status="approved"))
 
 
@@ -822,6 +837,7 @@ def admin_new_question():
         is_published = bool(request.form.get("is_published"))
         q_time_limit = request.form.get("question_time_limit_min", "").strip()
         year = request.form.get("year", "").strip() or None
+        mode = request.form.get("mode", "exam").strip()
 
         if not title or not description or not languages:
             flash("Title, description and at least one language are required.", "error")
@@ -840,9 +856,10 @@ def admin_new_question():
             time_limit_sec=time_limit_sec,
             memory_limit_kb=memory_limit_kb,
             question_time_limit_min=int(q_time_limit) if q_time_limit else None,
-            allowed_languages=",".join(languages),
+        allowed_languages=",".join(languages),
             is_published=is_published,
             year=year,
+            mode=mode,
         )
         db.session.add(q)
         db.session.flush()
@@ -1397,6 +1414,72 @@ def admin_export_csv():
         headers={"Content-Disposition": "attachment; filename=ti10_submissions_report.csv"},
     )
 
+@app.route("/admin/students/toggle-club-year", methods=["POST"])
+@admin_required
+def admin_toggle_club_year():
+    year = request.form.get("year", "").strip()
+    action = request.form.get("action", "enable")  # "enable" or "disable"
+    if not year:
+        flash("Select a year first.", "error")
+        return redirect(url_for("admin_students", status="approved"))
+
+    students = Student.query.filter_by(year=year, status="approved").all()
+    for s in students:
+        s.is_club_member = (action == "enable")
+    db.session.commit()
+    log_activity(
+        "Club Membership",
+        f"{'Enabled' if action == 'enable' else 'Disabled'} club access for {len(students)} student(s) in {year}.",
+    )
+    flash(f"Club access {'enabled' if action == 'enable' else 'disabled'} for {len(students)} student(s) in {year}.", "success")
+    return redirect(url_for("admin_students", status="approved"))
+
+@app.route("/admin/students/<int:sid>/toggle-club", methods=["POST"])
+@admin_required
+def admin_toggle_club_student(sid):
+    s = Student.query.get_or_404(sid)
+    s.is_club_member = not s.is_club_member
+    db.session.commit()
+    flash(f"Club membership {'enabled' if s.is_club_member else 'disabled'} for {s.name}.", "success")
+    return redirect(url_for("admin_students", status=request.form.get("status_filter", "approved")))
+
+@app.route("/club")
+@student_required
+def club_dashboard():
+    student = Student.query.get(session["student_id"])
+    if not student.is_club_member:
+        flash("You're not a member of the coding club yet. Ask your admin to add you.", "error")
+        return redirect(url_for("dashboard"))
+
+    questions = Question.query.filter_by(mode="club", is_published=True, is_released=True).order_by(Question.id).all()
+
+    progress = {}
+    for q in questions:
+        subs = (
+            Submission.query.filter_by(student_id=student.id, question_id=q.id)
+            .order_by(Submission.submitted_at)
+            .all()
+        )
+        if subs:
+            best = max(s.score for s in subs)
+            first = subs[0].score
+            progress[q.id] = {
+                "attempts": len(subs),
+                "best": best,
+                "improved": best > first,
+            }
+
+    return render_template("club_dashboard.html", questions=questions, progress=progress, student=student)
+
+@app.context_processor
+def inject_club_flag():
+    is_member = False
+    if session.get("student_id"):
+        student = Student.query.get(session["student_id"])
+        is_member = bool(student and student.is_club_member)
+    return dict(nav_is_club_member=is_member)
+
+
 
 # --------------------------------------------------------------------------
 # CLI commands
@@ -1433,3 +1516,4 @@ if __name__ == "__main__":
         Settings.get()
     debug_mode = os.getenv("FLASK_DEBUG", "0") == "1"
     app.run(host="0.0.0.0", port=5000, debug=debug_mode, use_reloader=False)
+

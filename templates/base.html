@@ -37,6 +37,9 @@
       <a href="{{ url_for('about') }}" class="btn btn-outline-light btn-sm">About</a>
       {% if session.get('student_id') %}
         <span class="text-light me-1 d-none d-sm-inline small">{{ session.get('student_name') }}</span>
+        {% if nav_is_club_member %}
+  <a href="{{ url_for('club_dashboard') }}" class="btn btn-outline-light btn-sm me-2">Coding Club</a>
+{% endif %}
         <a href="{{ url_for('logout') }}" class="btn btn-outline-light btn-sm">Logout</a>
       {% elif session.get('admin_id') %}
         <span class="text-light me-1 d-none d-sm-inline small">Admin: {{ session.get('admin_username') }}</span>
