@@ -742,8 +742,6 @@ def admin_reset_student_password(sid):
 
 @app.route("/admin/students/clear-data", methods=["POST"])
 @admin_required
-@app.route("/admin/students/clear-data", methods=["POST"])
-@admin_required
 def admin_clear_student_data():
     year = request.form.get("year", "").strip()
     mode = request.form.get("mode", "").strip()  # "" = all modes, or "club"/"exam"/"hackathon"
